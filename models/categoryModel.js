@@ -2,9 +2,18 @@ const mongoose = require('mongoose');
 
 const categorySchema = new mongoose.Schema(
   {
-    name: String,
-    name_ar: String,
-    image: String,
+    name: {
+      type: String,
+      required: [true, 'A Category must have an English name'],
+    },
+    name_ar: {
+      type: String,
+      required: [true, 'A Category must have an Arabic name'],
+    },
+    image: {
+      type: String,
+      required: [true, 'A Category must have an Image'],
+    },
   },
   {
     timestamps: true, // Add timestamps option
