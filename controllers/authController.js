@@ -310,6 +310,10 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 exports.resetPassword = catchAsync(async (req, res, next) => {
   const { otp, email, password, passwordConfirm } = req.body;
 
+  console.log(`otp: ${otp}`);
+  console.log(`email: ${email}`);
+  console.log(`password: ${password}`);
+  console.log(`passwordConfirm: ${passwordConfirm}`);
   // GET user based on the token
   const hashedOtp = crypto.createHash('sha256').update(otp).digest('hex');
 
