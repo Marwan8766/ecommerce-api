@@ -49,7 +49,7 @@ const userSchema = new mongoose.Schema({
     // default: 'male',
   },
 
-  address: String,
+  address: [String],
 
   passwordChangedAt: Date,
   // passwordResetOtp: String,
