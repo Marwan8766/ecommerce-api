@@ -298,7 +298,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   });
   if (!user) return next(new AppError('There is no user with this email'), 404);
 
-  if (user.emailConfirmOtpExpires < Date.now())
+  if (user.emailConfirmOtpExpires > Date.now())
     return next(new AppError("Your OTP hasn't expired yet", 400));
 
   // GENERATE the random reset otp
