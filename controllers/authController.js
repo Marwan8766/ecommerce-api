@@ -311,6 +311,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   const { otp, email, password, passwordConfirm } = req.body;
 
   console.log(`otp: ${otp}`);
+  console.log(`otpLen: ${otp.length}`);
   console.log(`email: ${email}`);
   console.log(`email len: ${email.length}`);
   console.log(`password: ${password}`);
