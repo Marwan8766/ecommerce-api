@@ -312,6 +312,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
 
   console.log(`otp: ${otp}`);
   console.log(`email: ${email}`);
+  console.log(`email len: ${email.length}`);
   console.log(`password: ${password}`);
   console.log(`passwordConfirm: ${passwordConfirm}`);
   // GET user based on the token
