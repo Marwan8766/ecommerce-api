@@ -35,13 +35,13 @@ router
     productController.configureCloudinary,
     productController.uploadUpdateProductCoverImage,
     productController.uploadUpdateProductImages,
-    productController.updateCategory
+    productController.updateProduct
   )
   .delete(
     productController.configureCloudinary,
     productController.preDeleteProductCoverImageMiddleware,
     productController.preDeleteProductImagesMiddleware,
-    productController.productController.deleteProduct
+    productController.deleteProduct
   );
 
 router.get('/all', productController.getAllProductAdmin);
