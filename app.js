@@ -19,6 +19,7 @@ app.use((req, res, next) => {
 const userRouter = require('./routes/userRoutes');
 const authRouter = require('./routes/authRoutes');
 const categoryRouter = require('./routes/categoryRoutes');
+const productRouter = require('./routes/productRoutes');
 
 app.use(express.json());
 // Middleware to parse urlencoded data
@@ -28,6 +29,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/category', categoryRouter);
+app.use('/api/v1/product', productRouter);
 
 app.all('*', (req, res, next) => {
   next(new AppError(`Couldn't find ${req.originalUrl} on this server!`, 400));

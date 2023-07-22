@@ -97,8 +97,8 @@ exports.updateCategory = catchAsync(async (req, res, next) => {
   const { name, name_ar } = req.body;
   const { imageUrl, category } = req;
 
-  category.name = name;
-  category.name_ar = name_ar;
+  if (name) category.name = name;
+  if (name_ar) category.name_ar = name_ar;
   if (imageUrl) category.image = imageUrl;
 
   const updatedCategory = await category.save({ validateModifiedOnly: true });
