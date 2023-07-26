@@ -5,10 +5,12 @@ const productSchema = new mongoose.Schema(
   {
     name: {
       type: String,
+      index: true,
       required: [true, 'A Product must have an English name'],
     },
     name_ar: {
       type: String,
+      index: true,
       required: [true, 'A Product must have an Arabic name'],
     },
     description: {
@@ -25,10 +27,19 @@ const productSchema = new mongoose.Schema(
       type: Number,
       min: 0,
       default: 0,
+      index: true,
+    },
+    price: {
+      type: Number,
+      min: 1,
+      required: [true, 'A Product must have a price'],
+      index: true,
     },
     active: {
       type: Boolean,
       default: true,
+      required: [true, 'A Product must be active or inactive'],
+      index: true,
     },
     category: {
       type: mongoose.Schema.ObjectId,
@@ -39,12 +50,12 @@ const productSchema = new mongoose.Schema(
       {
         color: {
           type: String,
-          enum: ['red', 'green', 'blue', 'yellow', 'black', 'white'],
+          enum: ['red', 'green', 'blue', 'yellow', 'black', 'white', null],
           default: null,
         },
         size: {
           type: String,
-          enum: ['S', 'M', 'L', 'XL', 'XXL'],
+          enum: ['S', 'M', 'L', 'XL', 'XXL', null],
           default: null,
         },
         quantity: {
@@ -52,13 +63,21 @@ const productSchema = new mongoose.Schema(
           min: 0,
           required: [true, 'A Product variation must have a quantity'],
         },
-        price: {
-          type: Number,
-          min: 1,
-          required: [true, 'A Product variation must have a price'],
-        },
       },
     ],
+    ratingsAverage: {
+      type: Number,
+      default: 4.5,
+      min: [1, 'rating avg must be above 1.0'],
+      max: [5, 'rating avg must be below 5.0'],
+      set: (val) => Math.round(val * 10) / 10, // 4.666 , 64.6 , 47 , 4.7
+      select: false,
+    },
+    ratingsQuantity: {
+      type: Number,
+      default: 0,
+      select: false,
+    },
     //
   },
   {

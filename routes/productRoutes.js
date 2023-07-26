@@ -9,7 +9,9 @@ const { myMulter, fileValidation } = require('../utils/multer');
 
 const router = express.Router();
 
-router.get('/', productController.getAllProductUser);
+router.get('/', productController.getAllProduct);
+
+router.get('/:id', productController.getProduct);
 
 // Protect all routes after this middleware
 router.use(authController.protect);
@@ -19,8 +21,7 @@ router.use(authController.restrictTo('admin'));
 
 router.post(
   '/',
-  myMulter(fileValidation.image).single('image'),
-  myMulter(fileValidation.image).array('images', 5), //Maximum 5 images allowed
+  myMulter(fileValidation.image),
   productController.checkCreateProductMiddleware,
   productController.configureCloudinary,
   productController.uploadCreateProductImages,
@@ -30,11 +31,11 @@ router.post(
 router
   .route('/:id')
   .patch(
-    myMulter(fileValidation.image).single('image'),
-    myMulter(fileValidation.image).array('images', 5), //Maximum 5 images allowed
+    myMulter(fileValidation.image),
     productController.configureCloudinary,
     productController.uploadUpdateProductCoverImage,
     productController.uploadUpdateProductImages,
+    productController.deleteProductImagesPreUpdate,
     productController.updateProduct
   )
   .delete(
@@ -44,6 +45,6 @@ router
     productController.deleteProduct
   );
 
-router.get('/all', productController.getAllProductAdmin);
+router.get('/all', productController.getAllProduct);
 
 module.exports = router;

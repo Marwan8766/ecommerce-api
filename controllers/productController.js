@@ -1,3 +1,5 @@
+const mongoose = require('mongoose');
+
 const Product = require('../models/productModel');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
@@ -17,8 +19,17 @@ exports.configureCloudinary = catchAsync(async (req, res, next) => {
 });
 
 exports.checkCreateProductMiddleware = catchAsync(async (req, res, next) => {
-  const { name, name_ar, description, description_ar, category } = req.body;
-  const coverImage = req.file;
+  const {
+    name,
+    name_ar,
+    description,
+    description_ar,
+    category,
+    variations,
+    price,
+  } = req.body;
+  console.log(req);
+  const coverImage = req.files['image'];
 
   if (!name)
     return next(
@@ -38,18 +49,29 @@ exports.checkCreateProductMiddleware = catchAsync(async (req, res, next) => {
       new AppError('Please provide the Product description in Arabic', 400)
     );
 
+  if (!category)
+    return next(new AppError('Please provide the Product category', 400));
+
   if (!coverImage)
     return next(new AppError('Please provide the Product cover image', 400));
 
-  if (!category)
-    return next(new AppError('Please provide the Product category', 400));
+  if (variations) {
+    try {
+      req.body.variations = JSON.parse(variations);
+    } catch {
+      return next(new AppError('Invalid variations data', 400));
+    }
+  }
+
+  if (!price)
+    return next(new AppError('Please provide the Product price', 400));
 
   next();
 });
 
 exports.uploadCreateProductImages = catchAsync(async (req, res, next) => {
-  const coverImage = req.file;
-  const images = req.files;
+  const coverImage = req.files['image'][0];
+  const images = req.files['images'];
 
   try {
     const result = await cloudinary.uploader.upload(coverImage.path, {
@@ -93,6 +115,7 @@ exports.createProduct = catchAsync(async (req, res, next) => {
     discount,
     variations,
     active,
+    price,
   } = req.body;
 
   const { coverImageUrl, imageUrls } = req;
@@ -105,6 +128,7 @@ exports.createProduct = catchAsync(async (req, res, next) => {
     description_ar,
     category,
     discount,
+    price,
     variations,
     coverImage: coverImageUrl,
     images: imageUrls,
@@ -122,7 +146,12 @@ exports.createProduct = catchAsync(async (req, res, next) => {
 });
 
 exports.uploadUpdateProductCoverImage = catchAsync(async (req, res, next) => {
-  const coverImage = req.file;
+  const coverImage = req.files['image'] ? req.files['image'][0] : undefined;
+  const images = req.files['images'];
+
+  if (!req.body.currentImages)
+    return next(new AppError('Please provide the current images', 400));
+
   const productId = req.params.id;
 
   const product = await Product.findById(productId);
@@ -145,7 +174,7 @@ exports.uploadUpdateProductCoverImage = catchAsync(async (req, res, next) => {
 });
 
 exports.uploadUpdateProductImages = catchAsync(async (req, res, next) => {
-  const images = req.files;
+  const images = req.files['images'];
 
   if (!images) return next();
 
@@ -168,6 +197,31 @@ exports.uploadUpdateProductImages = catchAsync(async (req, res, next) => {
   }
 });
 
+exports.deleteProductImagesPreUpdate = catchAsync(async (req, res, next) => {
+  const { currentImages } = req.body;
+  const { product } = req;
+
+  const deletePromises = [];
+  const imagesToDelete = [];
+
+  for (const image of product.images) {
+    if (!currentImages.includes(image)) {
+      deletePromises.push(deleteImageCloudinary(image));
+      imagesToDelete.push(image);
+    }
+  }
+
+  // Remove images to be deleted from product.images array
+  product.images = product.images.filter(
+    (image) => !imagesToDelete.includes(image)
+  );
+
+  await Promise.all(deletePromises);
+
+  req.product = product;
+  next();
+});
+
 exports.updateProduct = catchAsync(async (req, res, next) => {
   const {
     name,
@@ -176,6 +230,7 @@ exports.updateProduct = catchAsync(async (req, res, next) => {
     description_ar,
     category,
     discount,
+    price,
     variations,
     active,
   } = req.body;
@@ -188,11 +243,12 @@ exports.updateProduct = catchAsync(async (req, res, next) => {
   if (description_ar) product.description_ar = description_ar;
   if (category) product.category = category;
   if (discount) product.discount = discount;
+  if (price) product.price = price;
   if (variations) product.variations = variations;
   if (coverImageUrl) product.coverImage = coverImageUrl;
-  if (imagesUrl && imagesUrl.length > 0) product.images = imagesUrl;
-  if (active === true) product.active = true;
-  if (active === false) product.active = false;
+  if (imagesUrl && imagesUrl.length > 0)
+    product.images = [...product.images, ...imagesUrl];
+  product.active = active === false ? false : true;
 
   const updatedProduct = await product.save({ validateModifiedOnly: true });
 
@@ -239,35 +295,155 @@ exports.preDeleteProductImagesMiddleware = catchAsync(
   }
 );
 
+exports.getAllProduct = catchAsync(async (req, res, next) => {
+  // Extract filtering, sorting, and search parameters from the request query
+  const {
+    minPrice,
+    maxPrice,
+    discount,
+    search,
+    sort,
+    categoryId,
+    page,
+    limit,
+  } = req.query;
+
+  if (!categoryId)
+    return next(new AppError('Please provide the category id', 400));
+
+  // Build the filter object based on the parameters
+  const filter = {
+    category: mongoose.Types.ObjectId(categoryId),
+  };
+
+  if (!req.user || req.user.role !== 'admin') filter.active = true;
+
+  if (discount === 'true') {
+    filter.discount = { $gt: 0 };
+  } else if (discount === 'false') {
+    filter.discount = 0;
+  }
+
+  if (minPrice && maxPrice) filter.price = { $gte: minPrice, $lte: maxPrice };
+  else if (minPrice) filter.price = { $gte: minPrice };
+  else if (maxPrice) filter.price = { $lte: maxPrice };
+
+  // If there is a search query, use a regular expression to match against both English and Arabic names
+  if (search) {
+    const searchRegex = new RegExp(search, 'i');
+    filter.$or = [{ name: searchRegex }, { name_ar: searchRegex }];
+  }
+
+  let sortType = sort === 'desc' ? -1 : 1;
+
+  // Parse page and limit values from the request query
+  const parsedPage = parseInt(page, 10) || 1;
+  const parsedLimit = parseInt(limit, 10) || 5;
+  const skip = (parsedPage - 1) * parsedLimit;
+
+  const products = await Product.find(filter)
+    .sort({ price: sortType })
+    .skip(skip)
+    .limit(parsedLimit);
+
+  if (products.length === 0) {
+    return next(new AppError('No products were found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      currentPage: parsedPage,
+      totalItems: products.length,
+      totalPages: Math.ceil(products.length / parsedLimit),
+      data: products,
+    },
+  });
+});
+
+// exports.getAllProductAdmin = catchAsync(async (req, res, next) => {
+//   const products = await Product.find()
+//     .select('ratingsAverage ratingsQuantity')
+//     .exec();
+
+//   if (products.length === 0)
+//     return next(new AppError('No products were found', 404));
+
+//   res.status(200).json({
+//     status: 'success',
+//     data: {
+//       data: products,
+//     },
+//   });
+// });
+// exports.getAllProductAdmin = catchAsync(async (req, res, next) => {
+//   // Extract filtering, sorting, and search parameters from the request query
+//   const { minPrice, maxPrice, discount, search, sort } = req.query;
+
+//   // Build the filter object based on the parameters
+//   const filter = {
+//     'variations.price': {
+//       $gte: minPrice || 0,
+//       $lte: maxPrice || Number.MAX_SAFE_INTEGER,
+//     },
+//   };
+
+//   if (discount === 'true') {
+//     filter.discount = { $gt: 0 };
+//   } else if (discount === 'false') {
+//     filter.discount = 0;
+//   }
+
+//   // If there is a search query, use a regular expression to match against both English and Arabic names
+//   if (search) {
+//     const searchRegex = new RegExp(search, 'i');
+//     filter.$or = [{ name: searchRegex }, { name_ar: searchRegex }];
+//   }
+
+//   // Perform the aggregation to filter and sort the products
+//   const sortField = sort === 'desc' ? -1 : 1; // -1 for descending, 1 for ascending
+//   const products = await Product.aggregate([
+//     { $match: filter },
+//     {
+//       $addFields: {
+//         lowestPrice: { $min: '$variations.price' }, // Find the lowest price among variations
+//       },
+//     },
+//     {
+//       $sort: { lowestPrice: sortField }, // Sort by the lowest price based on the user's choice
+//     },
+//     {
+//       $project: {
+//         name: 1,
+//         name_ar: 1,
+//         description: 1,
+//         description_ar: 1,
+//         images: 1,
+//         coverImage: 1,
+//         discount: 1,
+//         active: 1,
+//         category: 1,
+//         variations: 1,
+//         ratingsAverage: 1,
+//         ratingsQuantity: 1,
+//       },
+//     },
+//   ]);
+
+//   if (products.length === 0) {
+//     return next(new AppError('No products were found', 404));
+//   }
+
+//   res.status(200).json({
+//     status: 'success',
+//     data: {
+//       data: products,
+//     },
+//   });
+// });
+
 exports.deleteProduct = handlerFactory.deleteOne(Product);
-
-exports.getAllProductUser = catchAsync(async (req, res, next) => {
-  const products = await Product.find({ active: true });
-
-  if (products.length === 0)
-    return next(new AppError('No products were found', 404));
-
-  res.status(200).json({
-    status: 'success',
-    data: {
-      data: products,
-    },
-  });
-});
-
-exports.getAllProductAdmin = catchAsync(async (req, res, next) => {
-  const products = await Product.find();
-
-  if (products.length === 0)
-    return next(new AppError('No products were found', 404));
-
-  res.status(200).json({
-    status: 'success',
-    data: {
-      data: products,
-    },
-  });
-});
+exports.getProduct = handlerFactory.getOne(Product, { path: 'category' });
 
 const deleteImageCloudinary = async (imageUrl) => {
   try {

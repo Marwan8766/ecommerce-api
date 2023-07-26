@@ -19,7 +19,7 @@ router.use(authController.restrictTo('admin'));
 
 router.post(
   '/',
-  myMulter(fileValidation.image).single('image'),
+  // myMulter(fileValidation.image).single('image'),
   categoryController.checkCreateCategoryMiddleware,
   categoryController.configureCloudinary,
   categoryController.createCategory
@@ -28,7 +28,7 @@ router.post(
 router
   .route('/:id')
   .patch(
-    myMulter(fileValidation.image).single('image'),
+    // myMulter(fileValidation.image).single('image'),
     categoryController.configureCloudinary,
     categoryController.uploadUpdateCategoryImage,
     categoryController.updateCategory
