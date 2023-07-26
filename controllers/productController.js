@@ -371,7 +371,7 @@ exports.getAllProduct = catchAsync(async (req, res, next) => {
       console.log(product);
     });
   }
-
+  //
   res.status(200).json({
     status: 'success',
     data: {
