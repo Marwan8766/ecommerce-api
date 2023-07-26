@@ -440,7 +440,7 @@ exports.getAllProduct = catchAsync(async (req, res, next) => {
 //       data: products,
 //     },
 //   });
-// });
+// }); //
 
 exports.deleteProduct = handlerFactory.deleteOne(Product);
 exports.getProduct = handlerFactory.getOne(Product, { path: 'category' });
