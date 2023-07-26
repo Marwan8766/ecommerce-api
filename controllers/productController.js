@@ -321,9 +321,14 @@ exports.getAllProduct = catchAsync(async (req, res, next) => {
   const filter = {
     category: mongoose.Types.ObjectId(categoryId),
   };
-
-  if (!req.user || req.user.role !== 'admin') filter.active = true;
-
+  let projection = {};
+  if (!req.user || req.user.role !== 'admin') {
+    filter.active = true;
+    projection = {
+      ratingsAverage: 0,
+      ratingsQuantity: 0,
+    };
+  }
   if (discount === 'true') {
     filter.discount = { $gt: 0 };
   } else if (discount === 'false') {
@@ -347,7 +352,7 @@ exports.getAllProduct = catchAsync(async (req, res, next) => {
   const parsedLimit = parseInt(limit, 10) || 5;
   const skip = (parsedPage - 1) * parsedLimit;
 
-  const products = await Product.find(filter)
+  const products = await Product.find(filter, projection)
     .sort({ price: sortType })
     .skip(skip)
     .limit(parsedLimit);
