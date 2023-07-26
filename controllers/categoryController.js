@@ -18,7 +18,7 @@ exports.configureCloudinary = catchAsync(async (req, res, next) => {
 
 exports.checkCreateCategoryMiddleware = catchAsync(async (req, res, next) => {
   const { name, name_ar } = req.body;
-  const image = req.file;
+  const image = req.files['image'][0];
 
   if (!name)
     return next(
@@ -38,7 +38,7 @@ exports.checkCreateCategoryMiddleware = catchAsync(async (req, res, next) => {
 
 exports.createCategory = catchAsync(async (req, res, next) => {
   const { name, name_ar } = req.body;
-  const image = req.file;
+  const image = req.files['image'][0];
 
   try {
     // Upload the photo to Cloudinary using the already configured cloudinary object
@@ -71,7 +71,7 @@ exports.createCategory = catchAsync(async (req, res, next) => {
 });
 
 exports.uploadUpdateCategoryImage = catchAsync(async (req, res, next) => {
-  const image = req.file;
+  const image = req.files['image'][0];
   const categoryId = req.params.id;
 
   const category = await Category.findById(categoryId);

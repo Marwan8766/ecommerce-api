@@ -21,7 +21,7 @@ function myMulter(customValidation) {
     storage,
     limits: {
       files: 5, // Maximum 5 files in a single request
-      fileSize: 2 * 1024 * 1024, // 2MB file size limit (adjust as needed)
+      fileSize: 30 * 1024 * 1024, // 30MB file size limit (adjust as needed)
     },
   }).fields([
     { name: 'image', maxCount: 1 }, // For single image upload

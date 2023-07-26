@@ -3,7 +3,13 @@ const mongoose = require('mongoose');
 const Product = require('../models/productModel');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
+const { promisify } = require('util');
+const User = require('../models/userModel');
+const Token = require('../models/token.model');
+const blacklistToken = require('../models/blackListToken.model');
+const jwt = require('jsonwebtoken');
 const handlerFactory = require('./handlerFactory');
+const Favourite = require('../models/favouriteModel');
 
 const cloudinary = require('cloudinary').v2;
 
@@ -350,6 +356,22 @@ exports.getAllProduct = catchAsync(async (req, res, next) => {
     return next(new AppError('No products were found', 404));
   }
 
+  if (req.user) {
+    console.log(`user: ${req.user}`);
+    const favourite = await Favourite.findOne({ user: req.user._id });
+    const favouriteIds = favourite
+      ? favourite.products.map((id) => id.toString())
+      : [];
+
+    console.log(`favIds: ${favouriteIds}`);
+    products.forEach((product) => {
+      const productIdString = product._id.toString();
+      product.favourite = favouriteIds.includes(productIdString);
+      console.log(`prodID: ${product._id} prodFav: ${product.favourite}`);
+      console.log(product);
+    });
+  }
+
   res.status(200).json({
     status: 'success',
     data: {
@@ -444,6 +466,52 @@ exports.getAllProduct = catchAsync(async (req, res, next) => {
 
 exports.deleteProduct = handlerFactory.deleteOne(Product);
 exports.getProduct = handlerFactory.getOne(Product, { path: 'category' });
+
+exports.authUserProduct = catchAsync(async (req, res, next) => {
+  // get token and check if it exists
+  let token;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer')
+  )
+    token = req.headers.authorization.split(' ')[1];
+  // else if (req.cookies.jwt) token = req.cookies.jwt;
+
+  if (!token) return next();
+
+  // verification token
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+
+  // check if the user still exists
+  const currentUser = await User.findById(decoded.id).select('+emailConfirmed');
+  if (!currentUser)
+    return next(new AppError('This user does no longer exist'), 401);
+
+  console.log(`user emailConfirmed: ${currentUser.emailConfirmed}`);
+  console.log(`user role: ${currentUser.role}`);
+  // check if user confirmed his email
+  if (!currentUser.emailConfirmed)
+    return next(new AppError('You must confirm your email first', 403));
+
+  // check if the user has chamged his password after the token was issued
+  if (
+    currentUser.passwordHasChanged(decoded.iat, currentUser.passwordChangedAt)
+  )
+    return next(
+      new AppError('Your password has changed, please login again', 401)
+    );
+
+  // check if the token is in the black list tokens
+  const tokenBlackListed = await blacklistToken.findOne({ token });
+  if (tokenBlackListed)
+    return next(
+      new AppError('Your session has expired, please login again', 401)
+    );
+
+  req.user = currentUser;
+  // Grant access to the protected route
+  next();
+});
 
 const deleteImageCloudinary = async (imageUrl) => {
   try {
