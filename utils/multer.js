@@ -1,6 +1,6 @@
 const multer = require('multer');
 const fileValidation = {
-  image: ['image/png', 'image/jpeg', 'image/gif'],
+  image: ['image/png', 'image/jpeg', 'image/gif', 'image/svg+xml'],
   pdf: ['application/pdf'],
 };
 
