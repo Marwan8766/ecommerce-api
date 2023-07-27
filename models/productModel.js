@@ -78,6 +78,10 @@ const productSchema = new mongoose.Schema(
       default: 0,
       // select: false,
     },
+    favourite: {
+      type: Boolean,
+      default: false,
+    },
     //
   },
   {

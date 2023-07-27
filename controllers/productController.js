@@ -362,18 +362,14 @@ exports.getAllProduct = catchAsync(async (req, res, next) => {
   }
 
   if (req.user) {
-    console.log(`user: ${req.user}`);
     const favourite = await Favourite.findOne({ user: req.user._id });
     const favouriteIds = favourite
       ? favourite.products.map((id) => id.toString())
       : [];
-
-    console.log(`favIds: ${favouriteIds}`);
+    ``;
     products.forEach((product) => {
       const productIdString = product._id.toString();
       product.favourite = favouriteIds.includes(productIdString);
-      console.log(`prodID: ${product._id} prodFav: ${product.favourite}`);
-      console.log(product);
     });
   }
   //
@@ -470,7 +466,30 @@ exports.getAllProduct = catchAsync(async (req, res, next) => {
 // }); //
 
 exports.deleteProduct = handlerFactory.deleteOne(Product);
-exports.getProduct = handlerFactory.getOne(Product, { path: 'category' });
+
+exports.getProduct = catchAsync(async (req, res, next) => {
+  const productId = req.params.id;
+
+  const product = await Product.findById(productId);
+  if (!product) return next(new AppError("Can't find this product", 404));
+
+  if (req.user) {
+    const favourite = await Favourite.findOne({ user: req.user._id });
+    const favouriteIds = favourite
+      ? favourite.products.map((id) => id.toString())
+      : [];
+    ``;
+    const productIdString = product._id.toString();
+    product.favourite = favouriteIds.includes(productIdString);
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      data: product,
+    },
+  });
+});
 
 exports.authUserProduct = catchAsync(async (req, res, next) => {
   // get token and check if it exists
