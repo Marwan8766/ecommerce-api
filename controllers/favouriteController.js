@@ -21,7 +21,7 @@ exports.addToFavourite = catchAsync(async (req, res, next) => {
     await favorite.save({ validateModifiedOnly: true });
   }
   // else create one with this product
-  else
+  else if (!favorite)
     favorite = await Favourite.create({ user: userId, products: [productId] });
 
   res.status(200).json({

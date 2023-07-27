@@ -8,6 +8,7 @@ const favouriteSchema = new mongoose.Schema(
       ref: 'User',
       required: [true, 'A Favourite must have a user'],
       index: true,
+      unique: true,
     },
     products: [
       {
