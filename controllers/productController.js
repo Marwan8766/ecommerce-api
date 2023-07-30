@@ -492,6 +492,31 @@ exports.getProduct = catchAsync(async (req, res, next) => {
     },
   });
 });
+// exports.getProduct = catchAsync(async (req, res, next) => {
+//   const productId = req.params.id;
+
+//   // find this product
+//   const product = await Product.findById(productId);
+//   if (!product) return next(new AppError("Can't find this product", 404));
+
+//   // if user is signed in check if he has the product in his favourites
+//   if (req.user) {
+//     const favourite = await Favourite.findOne({ user: req.user._id });
+//     const favouriteIds = favourite
+//       ? favourite.products.map((id) => id.toString())
+//       : [];
+//     ``;
+//     const productIdString = product._id.toString();
+//     product.favourite = favouriteIds.includes(productIdString);
+//   }
+
+//   res.status(200).json({
+//     status: 'success',
+//     data: {
+//       data: product,
+//     },
+//   });
+// });
 
 exports.authUserProduct = catchAsync(async (req, res, next) => {
   // get token and check if it exists

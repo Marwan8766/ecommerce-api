@@ -86,6 +86,9 @@ const productSchema = new mongoose.Schema(
   },
   {
     timestamps: true, // Add timestamps option
+
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
 
@@ -211,6 +214,23 @@ productSchema.pre('save', function (next) {
 productSchema.pre('save', function (next) {
   if (this.variations.length === 0) this.active = false;
   next();
+});
+
+// Add a virtual property 'variationsBySize' to the product schema
+productSchema.virtual('variationsBySize').get(function () {
+  const variationsBySize = new Map();
+  for (const variation of this.variations) {
+    const { color, size, quantity } = variation;
+    const key = size || 'No Size'; // Use 'No Size' if size is null
+    const colorAndQuantity = color ? { color, quantity } : { quantity };
+
+    if (variationsBySize.has(key)) {
+      variationsBySize.get(key).push(colorAndQuantity);
+    } else {
+      variationsBySize.set(key, [colorAndQuantity]);
+    }
+  }
+  return Object.fromEntries(variationsBySize.entries());
 });
 
 const Product = mongoose.model('Product', productSchema);
