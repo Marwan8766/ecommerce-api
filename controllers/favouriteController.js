@@ -61,3 +61,25 @@ exports.removeFromFavourite = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+exports.getAllFav = catchAsync(async (req, res, next) => {
+  const favorite = await Favourite.findOne({ user: req.user._id });
+
+  if (!favorite || favorite.products.length === 0) {
+    return next(new AppError('No favorite products were found', 404));
+  }
+
+  const favProductIds = favorite.products;
+
+  const favProducts = await Product.aggregate([
+    { $match: { _id: { $in: favProductIds } } },
+  ]);
+
+  res.status(200).json({
+    status: 'success',
+    dataLength: favProducts.length,
+    data: {
+      data: favProducts,
+    },
+  });
+});

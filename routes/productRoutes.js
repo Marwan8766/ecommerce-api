@@ -30,6 +30,7 @@ router
   .post(favouriteController.addToFavourite)
   .patch(favouriteController.removeFromFavourite);
 
+router.get('/favourite/me', favouriteController.getAllFav);
 // restrict all routes after this middleware for only admin
 router.use(authController.restrictTo('admin'));
 

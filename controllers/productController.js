@@ -309,6 +309,7 @@ exports.getAllProduct = catchAsync(async (req, res, next) => {
     discount,
     search,
     sort,
+    sortBy,
     categoryId,
     page,
     limit,
@@ -347,13 +348,23 @@ exports.getAllProduct = catchAsync(async (req, res, next) => {
 
   let sortType = sort === 'desc' ? -1 : 1;
 
+  let sortObj = {};
+
+  if (sortBy) {
+    const sortByArr = sortBy.split(',');
+    sortByArr.forEach((sortField) => {
+      if (sortField === 'price') sortObj.price = sortType;
+      if (sortField === 'createdAt') sortObj.createdAt = sortType;
+    });
+  }
+
   // Parse page and limit values from the request query
   const parsedPage = parseInt(page, 10) || 1;
   const parsedLimit = parseInt(limit, 10) || 5;
   const skip = (parsedPage - 1) * parsedLimit;
 
   const products = await Product.find(filter, projection)
-    .sort({ price: sortType })
+    .sort(sortObj)
     .skip(skip)
     .limit(parsedLimit);
 
