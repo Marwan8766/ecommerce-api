@@ -20,6 +20,7 @@ const userRouter = require('./routes/userRoutes');
 const authRouter = require('./routes/authRoutes');
 const categoryRouter = require('./routes/categoryRoutes');
 const productRouter = require('./routes/productRoutes');
+const couponRouter = require('./routes/couponRoutes');
 
 app.use(express.json());
 // Middleware to parse urlencoded data
@@ -30,6 +31,7 @@ app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/category', categoryRouter);
 app.use('/api/v1/product', productRouter);
+app.use('/api/v1/coupons', couponRouter);
 
 app.all('*', (req, res, next) => {
   next(new AppError(`Couldn't find ${req.originalUrl} on this server!`, 400));

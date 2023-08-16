@@ -75,6 +75,7 @@ exports.getAllFav = catchAsync(async (req, res, next) => {
   //   { $match: { _id: { $in: favProductIds } } },
   // ]);
 
+  // use findById to make the query goes through mongoose to add the virtual field (variationsBySize)
   const favProductsPromises = [];
   favProductIds.forEach((productId) => {
     favProductsPromises.push(Product.findById(productId));
