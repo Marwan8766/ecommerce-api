@@ -71,9 +71,16 @@ exports.getAllFav = catchAsync(async (req, res, next) => {
 
   const favProductIds = favorite.products;
 
-  const favProducts = await Product.aggregate([
-    { $match: { _id: { $in: favProductIds } } },
-  ]);
+  // const favProducts = await Product.aggregate([
+  //   { $match: { _id: { $in: favProductIds } } },
+  // ]);
+
+  const favProductsPromises = [];
+  favProductIds.forEach((productId) => {
+    favProductsPromises.push(Product.findById(productId));
+  });
+
+  const favProducts = await Promise.all(favProductsPromises);
 
   res.status(200).json({
     status: 'success',
