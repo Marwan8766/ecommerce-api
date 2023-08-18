@@ -7,6 +7,9 @@ const couponController = require('../controllers/couponController');
 
 const router = express.Router();
 
+// verify coupon
+router.get('/verify', couponController.verifyCoupon);
+
 // Protect all routes after this middleware
 router.use(authController.protect);
 
