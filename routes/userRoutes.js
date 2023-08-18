@@ -7,18 +7,14 @@ const userController = require('../controllers/userController');
 
 const router = express.Router();
 
-
 // Protect all routes after this middleware
 router.use(authController.protect);
 
+router.get('/me', userController.GetUser);
 
-// router.patch(
-//   '/updateMe',
-//   userController.UpdateMe
-// );
+router.patch('/me', userController.UpdateUser);
 
 // router.patch('/updatePassword', authController.updatePassword);
-// router.get('/me', userController.getMe, userController.Getuser);
 // router.delete('/deleteMe', userController.deleteMe, userController.deleteuser);
 // router.delete('/deleteAccount', authController.deleteAccount);
 

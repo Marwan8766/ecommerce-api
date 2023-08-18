@@ -49,7 +49,36 @@ const userSchema = new mongoose.Schema({
     // default: 'male',
   },
 
-  address: [String],
+  address: [
+    {
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point'],
+      },
+      coordinates: [Number],
+      name: {
+        type: String,
+        default: 'Home',
+      },
+      city: {
+        type: String,
+        required: [true, 'An Address must have a City name'],
+      },
+      street: {
+        type: String,
+        required: [true, 'An Address must have a Street name'],
+      },
+      buildingNumber: {
+        type: Number,
+        required: [true, 'An Address must have a Building Number'],
+      },
+      floorNumber: {
+        type: Number,
+        required: [true, 'An Address must have a Floor Number'],
+      },
+    },
+  ],
 
   passwordChangedAt: Date,
   // passwordResetOtp: String,
