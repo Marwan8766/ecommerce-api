@@ -75,6 +75,8 @@ cartSchema.pre('save', function (next) {
   next();
 });
 
+// pre find middleware to check item availability and recalc the total price
+
 // Pre-save middleware to check the availability of items
 // cartSchema.pre('save', async function (next) {
 //   try {

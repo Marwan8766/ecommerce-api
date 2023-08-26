@@ -22,7 +22,8 @@ exports.checkProductItemAvailability = catchAsync(async (req, res, next) => {
   // loop over the product variations and check if the variations exists
   product.variations.forEach((variation) => {
     if (
-      variation._id.toString() === item.selectedVariation.variationId.toString()
+      variation.color === item.selectedVariation.color &&
+      variation.size === item.selectedVariation.size
     ) {
       notExist = false;
       selectedVariationObj = variation;
@@ -42,7 +43,7 @@ exports.checkProductItemAvailability = catchAsync(async (req, res, next) => {
     ? cart.items.findIndex(
         (cartItem) =>
           cartItem.selectedVariation.variationId.toString() ===
-          item.selectedVariation.variationId.toString()
+          selectedVariationObj._id.toString()
       )
     : -1;
 
