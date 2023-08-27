@@ -75,13 +75,14 @@ exports.checkProductItemAvailability = catchAsync(async (req, res, next) => {
   };
 
   req.body.item = newItemObj;
+  req.cartItemIndex = cartItemIndex;
   next();
 });
 
 // add to cart
 exports.addToCart = catchAsync(async (req, res, next) => {
   // get the user from the req
-  const { user } = req;
+  const { user, cartItemIndex } = req;
 
   // get the item from req body
   const { item } = req.body;
@@ -110,8 +111,12 @@ exports.addToCart = catchAsync(async (req, res, next) => {
     return;
   }
 
-  // if it was found add the item to it
-  existingCart.items.push(item);
+  // if it was found add the item to it but check if it is already there just inc the quantity
+
+  if (cartItemIndex >= 0)
+    existingCart.items[cartItemIndex].quantity += item.quantity;
+  else existingCart.items.push(item);
+
   cart = await existingCart.save({ validateModifiedOnly: true });
 
   res.status(200).json({
