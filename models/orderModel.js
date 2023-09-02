@@ -7,6 +7,12 @@ const orderSchema = new mongoose.Schema(
       required: [true, 'An Order must have a user id'],
       ref: 'User',
     },
+    status: {
+      type: String,
+      required: [true, 'An Order must have a status'],
+      enum: ['pending', 'outForDeleviery', 'canceled', 'completed'],
+      default: 'pending',
+    },
     coupon: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Coupon',

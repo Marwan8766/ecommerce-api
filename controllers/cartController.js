@@ -76,6 +76,7 @@ exports.checkProductItemAvailability = catchAsync(async (req, res, next) => {
 
   req.body.item = newItemObj;
   req.cartItemIndex = cartItemIndex;
+  req.cart = cart;
   next();
 });
 
@@ -88,7 +89,7 @@ exports.addToCart = catchAsync(async (req, res, next) => {
   const { item } = req.body;
 
   // find the cart of that user
-  const existingCart = await Cart.findOne({ user: user._id });
+  const existingCart = req.cart;
 
   // initialize variable to  hold the cart after create or update
   let cart;

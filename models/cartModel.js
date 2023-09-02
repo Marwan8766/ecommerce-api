@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Product = require('./productModel');
 
 const cartSchema = new mongoose.Schema(
   {
@@ -75,6 +76,81 @@ cartSchema.pre('save', function (next) {
   next();
 });
 
+// pre find middleware to check item availability and re calc the total price
+cartSchema.post(/^find/, async function (cart) {
+  if (!cart || cart.items.length === 0) return;
+  // group all the product ids for this cart items in an array
+  const productIds = cart.items.map((item) => item.product);
+
+  // find all those products and put them in an object
+  const products = await Product.find({ _id: { $in: productIds } });
+
+  const productsObj = {};
+  products.forEach((product) => {
+    productsObj[product._id] = product;
+  });
+
+  // construct the new items array
+  const newItems = [];
+
+  // initialize a variable to know whether to save the cart or not
+  let cartHasChanged = false;
+
+  // loop over the cart items and for each one :
+  for (const item of cart.items) {
+    // find the product of it if not found remove cart item
+    const currentProduct = productsObj[item.product];
+    if (!currentProduct) {
+      cartHasChanged = true;
+      continue;
+    }
+    // find that variation if not found remove cart item
+    const variationIndex = currentProduct.variations.findIndex(
+      (variation) =>
+        variation._id.toString() ===
+        item.selectedVariation.variationId.toString()
+    );
+
+    if (variationIndex < 0) {
+      cartHasChanged = true;
+      continue;
+    }
+
+    const currentVariation = currentProduct.variations[variationIndex];
+
+    // check if the quantity is available if isnot available check if the product quanity is greater than or equal 1 if so change the quantity with the product quantity else remove the item
+    if (currentVariation.quantity >= item.quantity) {
+      // add it to the newItems array as it was found
+      if (
+        item.price !== currentProduct.price ||
+        item.discount !== currentProduct.discount
+      ) {
+        item.price = currentProduct.price;
+        item.discount = currentProduct.discount;
+        cartHasChanged = true;
+      }
+      newItems.push(item);
+    } else if (currentVariation.quantity >= 1) {
+      item.price = currentProduct.price;
+      item.discount = currentProduct.discount;
+      item.quantity = currentVariation.quantity;
+      cartHasChanged = true;
+      newItems.push(item);
+    } else {
+      cartHasChanged = true;
+      continue;
+    }
+  }
+  // if quantity changed or the price or discount of them is different or item is removed save the cart in order to recal the total price
+  if (cartHasChanged) {
+    cart.items = newItems;
+    await cart.save({ validateModifiedOnly: true });
+  }
+});
+
+const Cart = mongoose.model('Cart', cartSchema);
+module.exports = Cart;
+
 // pre find middleware to check item availability and recalc the total price
 
 // Pre-save middleware to check the availability of items
@@ -108,6 +184,3 @@ cartSchema.pre('save', function (next) {
 //     next(error);
 //   }
 // });
-
-const Cart = mongoose.model('Cart', cartSchema);
-module.exports = Cart;
