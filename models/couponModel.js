@@ -19,6 +19,7 @@ const couponSchema = new mongoose.Schema(
     discount: {
       type: Number,
       min: 1,
+      max: 100,
       required: [true, 'A Coupon must have a discount and be >= 1%'],
     },
 
