@@ -329,6 +329,7 @@ exports.valuPayment = catchAsync(async (req, res, next) => {
 });
 
 exports.transactionsWebhook = catchAsync(async (req, res, next) => {
+  console.log('obj: ', req.body.obj);
   // check if the req is authenticated
   if (
     !calculateCompareHMAC(req.body.obj, process.env.PAYMOB_HMAC, req.query.hmac)
@@ -407,7 +408,7 @@ const calculateCompareHMAC = (data, hmacSecret, receivedHmac) => {
     is_auth: data.is_auth,
     is_capture: data.is_capture,
     is_refunded: data.is_refunded,
-    is_standalone_payment: data.is_standalois_capturene_payment, //
+    is_standalone_payment: data.is_standalone_payment, //
     is_voided: data.is_voided,
     order_id: data.order.id,
     owner: data.owner,
