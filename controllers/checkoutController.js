@@ -9,7 +9,13 @@ const catchAsync = require('../utils/catchAsync');
 const agenda = require('../utils/agenda');
 
 exports.preCheckout = catchAsync(async (req, res, next) => {
-  const { paymentMethod, addressId, delevieryZoneId, couponName } = req.body;
+  const {
+    paymentMethod,
+    paymentMethodType,
+    addressId,
+    delevieryZoneId,
+    couponName,
+  } = req.body;
   const { user } = req;
 
   const promises = [];
@@ -36,6 +42,21 @@ exports.preCheckout = catchAsync(async (req, res, next) => {
 
   // run all the promises
   const [zoneResult, couponResult] = await Promise.all(promises);
+
+  // check if paymentMethod is online then there must be paymentMethodType
+  const paymentMethodTypeObj = {
+    card: true,
+    kiosk: true,
+    wallet: true,
+    valu: true,
+  };
+  if (paymentMethod === 'online' && !paymentMethodTypeObj[paymentMethodType])
+    return next(
+      new AppError(
+        'you must provide a valid paymentMethodType if you choose to pay online',
+        400
+      )
+    );
 
   // create the order
   const newOrderObj = {

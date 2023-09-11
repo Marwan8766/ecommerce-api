@@ -121,6 +121,17 @@ const orderSchema = new mongoose.Schema(
       enum: ['cash', 'online'],
       required: [true, 'An Order must have a payment method'],
     },
+    paymentMethodType: {
+      type: String,
+      enum: ['card', 'wallet', 'kiosk', 'valu'],
+      validate: {
+        validator: function (value) {
+          // Check if paymentMethod is 'online' and paymentMethodType is empty
+          return !(this.paymentMethod === 'online' && !value);
+        },
+        message: 'PaymentMethodType is required when paymentMethod is online.',
+      },
+    },
     items: [
       {
         product: {
