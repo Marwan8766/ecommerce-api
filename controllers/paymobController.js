@@ -179,8 +179,9 @@ exports.paymentKeyReq = catchAsync(async (req, res, next) => {
 
 // Middleware to handle credit card payment
 exports.cardPayment = catchAsync(async (req, res, next) => {
-  const { paymentMethodType } = req.body;
-  const { paymobPaymentToken } = req;
+  const { paymobPaymentToken, order } = req;
+
+  const { paymentMethodType } = order;
 
   // check that the paymentMethodType is card
   if (paymentMethodType !== 'card') return next();
@@ -199,8 +200,9 @@ exports.cardPayment = catchAsync(async (req, res, next) => {
 // middleware to handle kiosk payment
 exports.kioskPayment = catchAsync(async (req, res, next) => {
   try {
-    const { paymentMethodType } = req.body;
-    const { paymobPaymentToken, user } = req;
+    const { paymobPaymentToken, user, order } = req;
+
+    const { paymentMethodType } = order;
 
     // check that the paymentMethodType is kiosk
     if (paymentMethodType !== 'kiosk') return next();
@@ -257,8 +259,9 @@ exports.kioskPayment = catchAsync(async (req, res, next) => {
 // middleware to handle mobile wallet payment
 exports.walletPayment = catchAsync(async (req, res, next) => {
   try {
-    const { paymentMethodType } = req.body;
-    const { paymobPaymentToken } = req;
+    const { paymobPaymentToken, order } = req;
+
+    const { paymentMethodType } = order;
 
     // check that the paymentMethodType is wallet
     if (paymentMethodType !== 'wallet') return next();
@@ -305,8 +308,9 @@ exports.walletPayment = catchAsync(async (req, res, next) => {
 
 // middleware to handle mobile valu payment
 exports.valuPayment = catchAsync(async (req, res, next) => {
-  const { paymentMethodType } = req.body;
-  const { paymobPaymentToken } = req;
+  const { paymobPaymentToken, order } = req;
+
+  const { paymentMethodType } = order;
 
   // check that the paymentMethodType is card
   if (paymentMethodType !== 'valu')
