@@ -422,7 +422,3 @@ const calculateCompareHMAC = (data, hmacSecret, receivedHmac) => {
 
   return calculatedHMAC === receivedHmac;
 };
-
-return next(
-  new AppError('You must provide your paymentMethodType correctly', 400)
-);
