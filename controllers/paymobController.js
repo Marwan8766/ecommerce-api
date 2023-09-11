@@ -65,6 +65,8 @@ exports.orderRegister = catchAsync(async (req, res, next) => {
       };
     });
 
+    console.log(`orderItems: ${orderItems}`);
+
     // Define the URL and request data
     const url = 'https://accept.paymob.com/api/ecommerce/orders';
     const requestData = {
@@ -94,6 +96,7 @@ exports.orderRegister = catchAsync(async (req, res, next) => {
     next();
   } catch (error) {
     console.error('Error:', error.message);
+    console.log(`orderItems: ${orderItems}`);
     return next(new AppError('Something went wrong', 500));
   }
 });

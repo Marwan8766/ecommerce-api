@@ -70,6 +70,7 @@ exports.preCheckout = catchAsync(async (req, res, next) => {
     delevieryPrice: zoneResult.delevieryFee,
     delevieryTimeInDays: zoneResult.delevieryTimeInDays,
     paymentMethod,
+    paymentMethodType,
     items: cart.items,
   };
 
