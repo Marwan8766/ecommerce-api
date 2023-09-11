@@ -108,7 +108,7 @@ exports.paymentKeyReq = catchAsync(async (req, res, next) => {
     const { paymobAuthToken, order, paymobOrderId, user } = req;
 
     // get the integration id
-    const { paymentMethodType } = req.body;
+    const { paymentMethodType } = order;
 
     const integrationIdObj = {
       card: process.env.PAYMOB_CARD_INTEGRATION_ID,
@@ -422,3 +422,7 @@ const calculateCompareHMAC = (data, hmacSecret, receivedHmac) => {
 
   return calculatedHMAC === receivedHmac;
 };
+
+return next(
+  new AppError('You must provide your paymentMethodType correctly', 400)
+);
