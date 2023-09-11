@@ -346,6 +346,7 @@ exports.transactionsWebhook = catchAsync(async (req, res, next) => {
   if (!req.body.obj.success) return;
 
   // transaction success
+  console.log('transaction uccess');
 
   // pay transaction
   if (!req.body.obj.is_refunded) {

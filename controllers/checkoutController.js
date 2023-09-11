@@ -119,8 +119,11 @@ exports.checkoutCash = catchAsync(async (req, res, next) => {
   // check if the payment isnot cash then call next
   if (order.paymentMethod !== 'cash') {
     req.order = order;
+    console.log('online checkout');
     return next();
   }
+
+  console.log('cash checkout');
 
   // update the status to pending
   order.status = 'pending';
