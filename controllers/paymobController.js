@@ -330,13 +330,14 @@ exports.transactionsWebhook = catchAsync(async (req, res, next) => {
 
   // transaction failed
   // return
-  if (!req.body.success) return;
+  if (req.body.type !== 'TRANSACTION') return;
+  if (!req.body.obj.success) return;
 
   // transaction success
 
   // pay transaction
   if (!req.body.is_refunded) {
-    await payWebhookHandler(req.body);
+    await payWebhookHandler(req.body.obj);
     return res.status(200);
   }
 
@@ -364,6 +365,8 @@ const payWebhookHandler = async (data) => {
   order.status = 'pending';
   order.paymobOrderId = data.order.id;
   order.paymobPayTransactionId = data.id;
+  order.paymobPaymentType = data.source_data.type;
+  order.paymobPaymentSubType = data.source_data.sub_type;
   promises.push(order.save({ validateModifiedOnly: true }));
 
   // send email to the user
