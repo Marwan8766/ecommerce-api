@@ -114,6 +114,7 @@ exports.paymentKeyReq = catchAsync(async (req, res, next) => {
       card: process.env.PAYMOB_CARD_INTEGRATION_ID,
       wallet: process.env.PAYMOB_WALLET_INTEGRATION_ID,
       kiosk: process.env.PAYMOB_KIOSK_INTEGRATION_ID,
+      valu: process.env.PAYMOB_VALU_INTEGRATION_ID,
     };
 
     const integrationId = integrationIdObj[paymentMethodType];
