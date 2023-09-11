@@ -431,5 +431,7 @@ const calculateCompareHMAC = (data, hmacSecret, receivedHmac) => {
   hmac.update(concatenatedString);
   const calculatedHMAC = hmac.digest('hex');
 
+  console.log(`calcHmac: ${calculatedHMAC}`);
+  console.log(`recHmac: ${receivedHmac}`);
   return calculatedHMAC === receivedHmac;
 };
