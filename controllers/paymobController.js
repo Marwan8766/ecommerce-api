@@ -331,7 +331,7 @@ exports.valuPayment = catchAsync(async (req, res, next) => {
 exports.transactionsWebhook = catchAsync(async (req, res, next) => {
   // check if the req is authenticated
   if (
-    !calculateCompareHMAC(req.body, process.env.PAYMOB_HMAC, req.query.hmac)
+    !calculateCompareHMAC(req.body.obj, process.env.PAYMOB_HMAC, req.query.hmac)
   ) {
     console.log('incorrect hmac');
     return res.status(401).json({ message: 'Unauthorized' });
