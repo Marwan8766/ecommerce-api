@@ -28,6 +28,7 @@ exports.authReq = catchAsync(async (req, res, next) => {
         'Content-Type': 'application/json',
       },
     });
+    console.log(`response ${JSON.stringify(response)}`);
 
     // Check if the request was successful
     if (response.status !== 200) {
@@ -41,6 +42,7 @@ exports.authReq = catchAsync(async (req, res, next) => {
     next();
   } catch (error) {
     console.error('Error:', error.message);
+    console.log(`response ${JSON.stringify(response)}`);
     return next(new AppError('Something went wrong', 500));
   }
 });
