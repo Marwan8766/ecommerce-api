@@ -13,11 +13,13 @@ const catchAsync = require('../utils/catchAsync');
 // };
 
 exports.UpdateUser = catchAsync(async (req, res, next) => {
-  const { address, name, gender } = req.body;
+  const { address, firstName, lastName, phoneNumber, gender } = req.body;
   const { user } = req;
 
   if (address) user.address = address;
-  if (name) user.name = name;
+  if (firstName) user.firstName = firstName;
+  if (lastName) user.lastName = lastName;
+  if (phoneNumber) user.phoneNumber = phoneNumber;
   if (gender) user.gender = gender;
 
   const updatedUser = await user.save({ validateModifiedOnly: true });

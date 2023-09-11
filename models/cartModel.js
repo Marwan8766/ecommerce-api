@@ -22,6 +22,14 @@ const cartSchema = new mongoose.Schema(
           ref: 'Product',
           required: [true, 'A Cart Item must have a Product Id'],
         },
+        productName: {
+          type: String,
+          required: [true, 'A Cart Item must have a Product Name'],
+        },
+        productDescription: {
+          type: String,
+          required: [true, 'A Cart Item must have a Product Description'],
+        },
         selectedVariation: {
           color: String,
           size: String,

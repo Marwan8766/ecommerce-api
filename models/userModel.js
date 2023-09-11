@@ -5,9 +5,26 @@ const bcrypt = require('bcryptjs');
 const AppError = require('../utils/appError');
 
 const userSchema = new mongoose.Schema({
-  name: {
+  firstName: {
     type: String,
-    required: [true, 'Please write your name'],
+    required: [true, 'Please write your first name'],
+  },
+
+  lastName: {
+    type: String,
+    required: [true, 'Please write your last name'],
+  },
+
+  phoneNumber: {
+    type: String,
+    required: [true, 'Please provide your phone number'],
+    validate: {
+      validator: function (value) {
+        // Use a simple regex to check if it's a numeric string
+        return /^[0-9]+$/.test(value);
+      },
+      message: 'Invalid phone number format (only digits allowed)',
+    },
   },
 
   email: {
@@ -77,6 +94,11 @@ const userSchema = new mongoose.Schema({
         type: Number,
         required: [true, 'An Address must have a Floor Number'],
       },
+      apartmentNumber: {
+        type: Number,
+        required: [true, 'An Address must have an Apartment Number'],
+      },
+      landmark: String,
     },
   ],
 

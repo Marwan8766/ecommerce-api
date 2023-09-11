@@ -17,10 +17,14 @@ const orderSchema = new mongoose.Schema(
         'pending',
         'outForDeleviery',
         'canceled',
+        'canceledBeforePending',
         'completed',
       ],
       default: 'preCheckout',
     },
+    paymobOrderId: String,
+    paymobPayTransactionId: String,
+    paymobRefundTransactionId: String,
     couponId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Coupon',
@@ -85,6 +89,11 @@ const orderSchema = new mongoose.Schema(
         type: Number,
         required: [true, 'An Address must have a Floor Number'],
       },
+      apartmentNumber: {
+        type: Number,
+        required: [true, 'An Address must have an Apartment Number'],
+      },
+      landmark: String,
     },
     totalItemsPrice: {
       type: Number,
@@ -115,7 +124,15 @@ const orderSchema = new mongoose.Schema(
         product: {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'Product',
-          required: [true, 'A Cart Item must have a Product Id'],
+          required: [true, 'An Order Item must have a Product Id'],
+        },
+        productName: {
+          type: String,
+          required: [true, 'An Order Item must have a Product Name'],
+        },
+        productDescription: {
+          type: String,
+          required: [true, 'An Order Item must have a Product Description'],
         },
         selectedVariation: {
           color: String,

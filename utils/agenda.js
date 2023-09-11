@@ -66,7 +66,7 @@ agenda.define('cancel preCheckout order', async (job, done) => {
     const promises = [];
 
     // cancel the order
-    order.status = 'canceled';
+    order.status = 'canceledBeforePending';
     promises.push(order.save({ validateModifiedOnly: true }));
 
     // cancel the coupon
