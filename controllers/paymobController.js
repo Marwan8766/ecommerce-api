@@ -336,13 +336,13 @@ exports.transactionsWebhook = catchAsync(async (req, res, next) => {
   // transaction success
 
   // pay transaction
-  if (!req.body.is_refunded) {
+  if (!req.body.obj.is_refunded) {
     await payWebhookHandler(req.body.obj);
     return res.status(200);
   }
 
   // refund transaction
-  await refundWebhookHandler(req.body);
+  await refundWebhookHandler(req.body.obj);
 
   return res.status(200);
 });
