@@ -394,35 +394,37 @@ const payWebhookHandler = async (data) => {
 const refundWebhookHandler = async (data) => {};
 
 const calculateCompareHMAC = (data, hmacSecret, receivedHmac) => {
-  // Define the keys that should be included in the HMAC calculation
-  const keysForHMAC = [
-    'amount_cents',
-    'created_at',
-    'currency',
-    'error_occured',
-    'has_parent_transaction',
-    'id',
-    'integration_id',
-    'is_3d_secure',
-    'is_auth',
-    'is_capture',
-    'is_refunded',
-    'is_standalone_payment',
-    'is_voided',
-    'order.id',
-    'owner',
-    'pending',
-    'source_data.pan',
-    'source_data.sub_type',
-    'source_data.type',
-    'success',
-  ];
+  // Define the hmac object
+  const hmacObj = {
+    amount_cents: data.amount_cents,
+    created_at: data.created_at,
+    currency: data.currency,
+    error_occured: data.error_occured,
+    has_parent_transaction: data.has_parent_transaction,
+    id: data.id,
+    integration_id: data.integration_id,
+    is_3d_secure: data.is_3d_secure,
+    is_auth: data.is_auth,
+    is_capture: data.is_capture,
+    is_refunded: data.is_refunded,
+    is_standalone_payment: data.is_standalois_capturene_payment, //
+    is_voided: data.is_voided,
+    order_id: data.order.id,
+    owner: data.owner,
+    pending: data.pending,
+    source_data_pan: data.source_data.pan,
+    source_data_sub_type: data.source_data.type,
+    source_data_type: data.source_data.sub_type,
+    success: data.success,
+  };
 
   // Sort the keys lexicographically
-  keysForHMAC.sort();
+  const sortedKeys = Object.keys(hmacObj).sort();
 
   // Concatenate the values of sorted keys
-  const concatenatedString = keysForHMAC.map((key) => data[key] || '').join('');
+  const concatenatedString = sortedKeys
+    .map((key) => hmacObj[key] || '')
+    .join('');
 
   // Calculate the HMAC using SHA512 and the provided HMAC secret
   const hmac = crypto.createHmac('sha512', hmacSecret);
