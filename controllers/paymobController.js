@@ -337,6 +337,7 @@ exports.transactionsWebhook = catchAsync(async (req, res, next) => {
 
   // transaction failed
   // return
+  console.log(`req.body.obj: ${req.body.obj}`);
   if (req.body.type !== 'TRANSACTION') return;
   if (!req.body.obj.success) return;
 
