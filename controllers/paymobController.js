@@ -28,7 +28,9 @@ exports.authReq = catchAsync(async (req, res, next) => {
         'Content-Type': 'application/json',
       },
     });
-    console.log(`response ${response}`);
+    console.log(`response ${response.data}`);
+    console.log(`response[0] ${response[1]}`);
+    console.log(`response[1] ${response[0]}`);
 
     // Check if the request was successful
     if (response.status !== 200) {
@@ -42,7 +44,9 @@ exports.authReq = catchAsync(async (req, res, next) => {
     next();
   } catch (error) {
     console.error('Error:', error.message);
-    console.log(`response ${response}`);
+    console.log(`response ${response.data}`);
+    console.log(`response[0] ${response[1]}`);
+    console.log(`response[1] ${response[0]}`);
     return next(new AppError('Something went wrong', 500));
   }
 });
