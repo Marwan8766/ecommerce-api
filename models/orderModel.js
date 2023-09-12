@@ -27,6 +27,7 @@ const orderSchema = new mongoose.Schema(
     paymobRefundTransactionId: String,
     paymobPaymentType: String,
     paymobPaymentSubType: String,
+    paymentMobileNumber: String,
     couponId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Coupon',

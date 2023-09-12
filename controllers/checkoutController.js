@@ -12,11 +12,40 @@ exports.preCheckout = catchAsync(async (req, res, next) => {
   const {
     paymentMethod,
     paymentMethodType,
+    mobileNumber,
     addressId,
     delevieryZoneId,
     couponName,
   } = req.body;
   const { user } = req;
+
+  // check if paymentMethod is online then there must be paymentMethodType
+  const paymentMethodTypeObj = {
+    card: true,
+    kiosk: true,
+    wallet: true,
+    valu: true,
+  };
+  if (paymentMethod === 'online' && !paymentMethodTypeObj[paymentMethodType])
+    return next(
+      new AppError(
+        'you must provide a valid paymentMethodType if you choose to pay online',
+        400
+      )
+    );
+
+  // if payment is online and with wallet there should be mobile num
+  if (
+    paymentMethod === 'online' &&
+    paymentMethodType === 'wallet' &&
+    !mobileNumber
+  )
+    return next(
+      new AppError(
+        'you must provide a valid mobile number if you choose to pay online via mobile wallets',
+        400
+      )
+    );
 
   const promises = [];
 
@@ -43,21 +72,6 @@ exports.preCheckout = catchAsync(async (req, res, next) => {
   // run all the promises
   const [zoneResult, couponResult] = await Promise.all(promises);
 
-  // check if paymentMethod is online then there must be paymentMethodType
-  const paymentMethodTypeObj = {
-    card: true,
-    kiosk: true,
-    wallet: true,
-    valu: true,
-  };
-  if (paymentMethod === 'online' && !paymentMethodTypeObj[paymentMethodType])
-    return next(
-      new AppError(
-        'you must provide a valid paymentMethodType if you choose to pay online',
-        400
-      )
-    );
-
   // create the order
   const newOrderObj = {
     user: user._id,
@@ -71,6 +85,7 @@ exports.preCheckout = catchAsync(async (req, res, next) => {
     delevieryTimeInDays: zoneResult.delevieryTimeInDays,
     paymentMethod,
     paymentMethodType,
+    paymentMobileNumber: mobileNumber,
     items: cart.items,
   };
 

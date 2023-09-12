@@ -7,7 +7,6 @@ const crypto = require('crypto');
 const createOrderEmail = require('../utils/createOrderEmail');
 const User = require('../models/userModel');
 const sendMail = require('../utils/email');
-const { AsyncResource } = require('async_hooks');
 
 /* 
 1. Authentication Request:
@@ -72,7 +71,7 @@ exports.orderRegister = catchAsync(async (req, res, next) => {
     const requestData = {
       auth_token: paymobAuthToken,
       delivery_needed: false,
-      amount_cents: order.totalPrice,
+      amount_cents: order.totalPrice * 100,
       currency: 'EGP',
       merchant_order_id: order._id,
       items: orderItems,
@@ -262,7 +261,7 @@ exports.walletPayment = catchAsync(async (req, res, next) => {
   try {
     const { paymobPaymentToken, order } = req;
 
-    const { paymentMethodType } = order;
+    const { paymentMethodType, paymentMobileNumber } = order;
 
     // check that the paymentMethodType is wallet
     if (paymentMethodType !== 'wallet') return next();
@@ -271,7 +270,7 @@ exports.walletPayment = catchAsync(async (req, res, next) => {
     const url = 'https://accept.paymob.com/api/acceptance/payments/pay';
     const requestData = {
       source: {
-        identifier: '01010101010',
+        identifier: paymentMobileNumber,
         subtype: 'WALLET',
       },
       payment_token: paymobPaymentToken,
