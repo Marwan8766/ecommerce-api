@@ -414,8 +414,8 @@ const calculateCompareHMAC = (data, hmacSecret, receivedHmac) => {
     owner: data.owner,
     pending: data.pending,
     'source_data.pan': data.source_data.pan,
-    'source_data.sub_type': data.source_data.type,
-    'source_data.type': data.source_data.sub_type,
+    'source_data.sub_type': data.source_data.sub_type,
+    'source_data.type': data.source_data.type,
     success: data.success,
   };
 
