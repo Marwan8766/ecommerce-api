@@ -410,12 +410,12 @@ const calculateCompareHMAC = (data, hmacSecret, receivedHmac) => {
     is_refunded: data.is_refunded,
     is_standalone_payment: data.is_standalone_payment, //
     is_voided: data.is_voided,
-    order_id: data.order.id,
+    'order.id': data.order.id,
     owner: data.owner,
     pending: data.pending,
-    source_data_pan: data.source_data.pan,
-    source_data_sub_type: data.source_data.type,
-    source_data_type: data.source_data.sub_type,
+    'source_data.pan': data.source_data.pan,
+    'source_data.sub_type': data.source_data.type,
+    'source_data.type': data.source_data.sub_type,
     success: data.success,
   };
 
