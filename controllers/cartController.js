@@ -154,7 +154,7 @@ exports.removeFromCart = catchAsync(async (req, res, next) => {
     return next(new AppError('Item not found in the cart', 404));
 
   // if item has quantity > 1 and delete isnot true then decrement it
-  if (cart.items[itemIndex].quantity > 1 && deleteItem !== true) {
+  if (cart.items[itemIndex].quantity > 1 && deleteItem !== 'true') {
     cart.items[itemIndex].quantity--;
   } else {
     // else Remove the item from the items array using splice as its quantity was 1 or deleteItem is true
