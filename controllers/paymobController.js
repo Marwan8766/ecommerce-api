@@ -430,7 +430,7 @@ const calculateCompareHMAC = (data, hmacSecret, receivedHmac) => {
   console.log(`concentratedString: ${concatenatedString}`);
 
   // Calculate the HMAC using SHA512 and the provided HMAC secret
-  const hmac = crypto.createHmac('SHA512', hmacSecret);
+  const hmac = crypto.createHmac('sha512', hmacSecret);
   hmac.update(concatenatedString);
   const calculatedHMAC = hmac.digest('hex');
 
