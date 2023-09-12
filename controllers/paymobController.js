@@ -421,9 +421,11 @@ const calculateCompareHMAC = (data, hmacSecret, receivedHmac) => {
 
   // Sort the keys lexicographically
   const sortedKeys = Object.keys(hmacObj).sort();
+  console.log('sortedKeys: ', sortedKeys);
 
   // Concatenate the values of sorted keys
   const concatenatedString = sortedKeys.map((key) => hmacObj[key]).join('');
+  console.log(`concentratedString: ${concatenatedString}`);
 
   // Calculate the HMAC using SHA512 and the provided HMAC secret
   const hmac = crypto.createHmac('SHA512', hmacSecret);
