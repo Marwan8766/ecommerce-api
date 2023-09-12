@@ -226,7 +226,7 @@ exports.kioskPayment = catchAsync(async (req, res, next) => {
     });
 
     // Handle the response as needed
-    if (response.status !== 201) {
+    if (response.status !== 200) {
       console.error(
         'kiosk payment Registration Failed. Status Code:',
         response.status
@@ -285,7 +285,7 @@ exports.walletPayment = catchAsync(async (req, res, next) => {
     });
 
     // Handle the response as needed
-    if (response.status !== 201) {
+    if (response.status !== 200) {
       console.error(
         'wallet payment Registration Failed. Status Code:',
         response.status
