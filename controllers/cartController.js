@@ -150,8 +150,13 @@ exports.removeFromCart = catchAsync(async (req, res, next) => {
   if (itemIndex === -1)
     return next(new AppError('Item not found in the cart', 404));
 
-  // Remove the item from the items array using splice
-  cart.items.splice(itemIndex, 1);
+  // if item has quantity > 1 then decrement it
+  if (cart.items[itemIndex].quantity > 1) {
+    cart.items[itemIndex].quantity--;
+  } else {
+    // else Remove the item from the items array using splice
+    cart.items.splice(itemIndex, 1);
+  }
 
   // Save the updated cart
   const updatedCart = await cart.save({ validateModifiedOnly: true });
