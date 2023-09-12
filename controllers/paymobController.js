@@ -271,7 +271,7 @@ exports.walletPayment = catchAsync(async (req, res, next) => {
     const url = 'https://accept.paymob.com/api/acceptance/payments/pay';
     const requestData = {
       source: {
-        identifier: 'wallet mobile number',
+        identifier: '01010101010',
         subtype: 'WALLET',
       },
       payment_token: paymobPaymentToken,
