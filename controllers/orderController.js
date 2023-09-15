@@ -1,9 +1,10 @@
 const Order = require('../models/orderModel');
 const Factory = require('./handlerFactory');
+const paymobController = require('./paymobController');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
-// get all orders (admin only)  (includes filter by status and date and totalprice and paymentMethod and paymentMethodType and userId)
+// get all orders (protected)  (includes filter by status and date and totalprice and paymentMethod and paymentMethodType and userId)
 exports.getAllOrders = catchAsync(async (req, res, next) => {
   const {
     userId,
@@ -133,4 +134,178 @@ exports.updateOrderFilterBody = (req, res, next) => {
 exports.updateOrder = Factory.updateOne(Order);
 
 // cancel order
-exports.cancelOrder = catchAsync(async (req, res, next) => {});
+exports.cancelOrder = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const { user } = req;
+
+  // find the order
+  const order = await Order.findById(id);
+  if (!order) return next(new AppError('no order was found with that id', 404));
+
+  // user must own the order or be an admin
+  if (order.user.toString() !== user._id.toString() && user.role !== 'admin')
+    return next(
+      new AppError("you don't have the auhtority to cancel this order", 403)
+    );
+
+  // CHECK ORDER STATUS
+
+  // if not pending or outForDeleviery return error
+  if (order.status !== 'pending' || order.status !== 'outForDeleviery')
+    return next(
+      new AppError(`you can't cancel this order as it is ${order.status}`),
+      400
+    );
+
+  // CASE PENDING
+  if (order.status === 'pending') {
+    // cash payment
+    if (order.paymentMethod === 'cash') {
+      req.cancelType = 'pendingCash';
+      req.order = order;
+      return next();
+    }
+
+    // online payment
+    if (order.paymentMethod === 'online') {
+      req.cancelType = 'pendingOnline';
+      req.order = order;
+      return next();
+    }
+  }
+
+  // CASE DELEVIERY
+  if (order.status === 'outForDeleviery') {
+    // cash payment
+    if (order.paymentMethod === 'cash') {
+      req.cancelType = 'delevieryCash';
+      req.order = order;
+      return next();
+    }
+
+    // online payment
+    if (order.paymentMethod === 'online') {
+      req.cancelType = 'delevieryOnline';
+      req.order = order;
+      return next();
+    }
+  }
+
+  // here it means that no case matched the order so return error
+  console.error(
+    `can't update this order: ${order._id} as it's case hasn't been matched: ${order}`
+  );
+
+  return next(
+    new AppError("something went wrong can't cancel this order", 500)
+  );
+});
+
+const cancelCashPending = catchAsync(async (req, res, next) => {
+  const { cancelType, order } = req;
+
+  if (cancelType !== 'pendingCash') return next();
+
+  // cancel the order
+  order.status = 'canceled';
+  const updatedOrder = await order.save({ validateModifiedOnly: true });
+
+  if (!updatedOrder)
+    return next(
+      new AppError('error canceling your order please try again', 500)
+    );
+
+  return res.status(200).json({
+    status: 'success',
+    message: 'your order has been successfully canceled',
+  });
+});
+
+const cancelOnlinePending = catchAsync(async (req, res, next) => {
+  const { cancelType, order, paymobAuthToken } = req;
+  const transaction_id = order.paymobPayTransactionId;
+  const amount = order.totalPrice;
+  let amount_cents_refunded = 0;
+
+  if (cancelType !== 'pendingOnline') return next();
+
+  // cancel the order and return all user money
+  try {
+    amount_cents_refunded = await paymobController.refund(
+      paymobAuthToken,
+      transaction_id,
+      amount
+    );
+  } catch (error) {
+    console.error(`refund error: ${error}`);
+    return next(new AppError('error while refunding', 500));
+  }
+
+  return res.status(200).json({
+    status: 'success',
+    message: 'the order has been successfully canceled and refunded.',
+    amount_cents_refunded,
+  });
+});
+
+const cancelCashDeleviery = catchAsync(async (req, res, next) => {
+  const { cancelType, order, user } = req;
+
+  if (cancelType !== 'delevieryOnline') return next();
+
+  // cash payment and not admin so return error
+  if (order.paymentMethod === 'cash' && user.role !== 'admin') {
+    return next(
+      new AppError(
+        "the order has been already out for deleviery so sorry you can't cancel it anymore you have to wait untill the order is deleviered and pay the deleviery fee only and don't take the order",
+        400
+      )
+    );
+  }
+
+  // cash and admin so cancel the order and return response
+  if (order.paymentMethod === 'cash' && user.role === 'admin') {
+    order.status = 'canceled';
+    const updatedOrder = await order.save({ validateModifiedOnly: true });
+
+    if (!updatedOrder)
+      return next(
+        new AppError('error canceling your order please try again', 500)
+      );
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'your order has been successfully canceled',
+    });
+  }
+
+  next();
+});
+
+const cancelOnlineDeleviery = catchAsync(async (req, res, next) => {
+  const { cancelType, order, paymobAuthToken } = req;
+  const transaction_id = order.paymobPayTransactionId;
+  const amount = order.totalPrice;
+  let amount_cents_refunded = 0;
+
+  if (cancelType !== 'delevieryOnline')
+    return next(new AppError('something went wrong', 400));
+
+  // cancel the order and return all user money
+  try {
+    amount_cents_refunded = await paymobController.refund(
+      paymobAuthToken,
+      transaction_id,
+      amount
+    );
+  } catch (error) {
+    console.error(`refund error: ${error}`);
+    return next(new AppError('error while refunding', 500));
+  }
+
+  return res.status(200).json({
+    status: 'success',
+    message: 'the order has been successfully canceled and refunded.',
+    amount_cents_refunded,
+  });
+});

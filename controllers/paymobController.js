@@ -391,7 +391,12 @@ const payWebhookHandler = async (data) => {
   await Promise.all(promises);
 };
 
-const refundWebhookHandler = async (data) => {};
+const refundWebhookHandler = async (data) => {
+  await Order.findByIdAndUpdate(data.order.merchant_order_id, {
+    status: 'canceled',
+    paymobRefundTransactionId: data.id,
+  });
+};
 
 const calculateCompareHMAC = (data, hmacSecret, receivedHmac) => {
   // Define the hmac object
@@ -438,4 +443,36 @@ const calculateCompareHMAC = (data, hmacSecret, receivedHmac) => {
   console.log(`calcHmac: ${calculatedHMAC}`);
   console.log(`recHmac: ${receivedHmac}`);
   return calculatedHMAC === receivedHmac;
+};
+
+exports.refund = async (auth_token, transaction_id, amount) => {
+  try {
+    // Define the URL and request data
+    const url = 'https://accept.paymob.com/api/acceptance/void_refund/refund';
+    const requestData = {
+      auth_token,
+      transaction_id,
+      amount_cents: amount * 100,
+    };
+
+    // Make the POST request to authenticate
+    const response = await axios.post(url, requestData, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    // Check if the request was successful
+    if (response.data.obj.success !== 'true') {
+      console.error('Refund failed. Status Code:', response.status);
+      throw new AppError('something went wrong while refunding', 500);
+    }
+
+    const amount_cents = response.data.obj.amount_cents;
+    console.log('Refund Successful.');
+    return amount_cents;
+  } catch (error) {
+    console.error('error while refunding: ', error);
+    throw new AppError('something went wrong while refunding', 500);
+  }
 };
