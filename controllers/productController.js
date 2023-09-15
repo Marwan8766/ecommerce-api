@@ -358,22 +358,35 @@ exports.getAllProduct = catchAsync(async (req, res, next) => {
     });
   }
 
+  // Define a promises array
+  const promises = [];
+
   // Parse page and limit values from the request query
   const parsedPage = parseInt(page, 10) || 1;
   const parsedLimit = parseInt(limit, 10) || 5;
   const skip = (parsedPage - 1) * parsedLimit;
 
-  const products = await Product.find(filter, projection)
+  let totalCount = 0;
+  let products = [];
+
+  const productsPromise = Product.find(filter, projection)
     .sort(sortObj)
     .skip(skip)
     .limit(parsedLimit);
+  promises.push(productsPromise);
 
-  if (products.length === 0) {
-    return next(new AppError('No products were found', 404));
-  }
+  const totalCountPromise = Product.countDocuments(filter);
+  promises.push(totalCountPromise);
 
   if (req.user) {
-    const favourite = await Favourite.findOne({ user: req.user._id });
+    const favouritePromise = Favourite.findOne({ user: req.user._id });
+    promises.push(favouritePromise);
+
+    const [productsDoc, totalDocCount, favourite] = await Promise.all(promises);
+
+    totalCount = totalDocCount;
+    products = productsDoc;
+
     const favouriteIds = favourite
       ? favourite.products.map((id) => id.toString())
       : [];
@@ -382,14 +395,23 @@ exports.getAllProduct = catchAsync(async (req, res, next) => {
       const productIdString = product._id.toString();
       product.favourite = favouriteIds.includes(productIdString);
     });
+  } else {
+    const [productsDoc, totalDocCount] = await Promise.all(promises);
+
+    totalCount = totalDocCount;
+    products = productsDoc;
+  }
+
+  if (products.length === 0) {
+    return next(new AppError('No products were found', 404));
   }
   //
   res.status(200).json({
     status: 'success',
     data: {
       currentPage: parsedPage,
-      totalItems: products.length,
-      totalPages: Math.ceil(products.length / parsedLimit),
+      totalItems: totalCount,
+      totalPages: Math.ceil(totalCount / parsedLimit),
       data: products,
     },
   });

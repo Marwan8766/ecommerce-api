@@ -73,16 +73,25 @@ exports.getAllOrders = catchAsync(async (req, res, next) => {
     });
   }
 
+  // Define a promises array to hold the async promises
+  const promises = [];
+
   // Parse page and limit values from the request query
   const parsedPage = parseInt(page, 10) || 1;
   const parsedLimit = parseInt(limit, 10) || 5;
   const skip = (parsedPage - 1) * parsedLimit;
 
+  const totalCountPromise = Order.countDocuments(queryObj);
+  promises.push(totalCountPromise);
+
   // find the orders
-  const orders = await Order.find(queryObj)
+  const ordersPromise = Order.find(queryObj)
     .sort(sortObj)
     .skip(skip)
     .limit(parsedLimit);
+  promises.push(ordersPromise);
+
+  const [totalCount, orders] = await Promise.all(promises);
 
   // return error if not found
   if (orders.length === 0)
@@ -93,8 +102,8 @@ exports.getAllOrders = catchAsync(async (req, res, next) => {
     status: 'success',
     data: {
       currentPage: parsedPage,
-      totalItems: orders.length,
-      totalPages: Math.ceil(orders.length / parsedLimit),
+      totalItems: totalCount,
+      totalPages: Math.ceil(totalCount / parsedLimit),
       data: orders,
     },
   });
