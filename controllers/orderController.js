@@ -201,7 +201,7 @@ exports.cancelOrder = catchAsync(async (req, res, next) => {
   );
 });
 
-const cancelCashPending = catchAsync(async (req, res, next) => {
+exports.cancelCashPending = catchAsync(async (req, res, next) => {
   const { cancelType, order } = req;
 
   if (cancelType !== 'pendingCash') return next();
@@ -221,7 +221,7 @@ const cancelCashPending = catchAsync(async (req, res, next) => {
   });
 });
 
-const cancelOnlinePending = catchAsync(async (req, res, next) => {
+exports.cancelOnlinePending = catchAsync(async (req, res, next) => {
   const { cancelType, order, paymobAuthToken } = req;
   const transaction_id = order.paymobPayTransactionId;
   const amount = order.totalPrice;
@@ -248,7 +248,7 @@ const cancelOnlinePending = catchAsync(async (req, res, next) => {
   });
 });
 
-const cancelCashDeleviery = catchAsync(async (req, res, next) => {
+exports.cancelCashDeleviery = catchAsync(async (req, res, next) => {
   const { cancelType, order, user } = req;
 
   if (cancelType !== 'delevieryOnline') return next();
@@ -282,7 +282,7 @@ const cancelCashDeleviery = catchAsync(async (req, res, next) => {
   next();
 });
 
-const cancelOnlineDeleviery = catchAsync(async (req, res, next) => {
+exports.cancelOnlineDeleviery = catchAsync(async (req, res, next) => {
   const { cancelType, order, paymobAuthToken } = req;
   const transaction_id = order.paymobPayTransactionId;
   const amount = order.totalPrice;
