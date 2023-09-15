@@ -315,13 +315,13 @@ exports.getAllProduct = catchAsync(async (req, res, next) => {
     limit,
   } = req.query;
 
-  if (!categoryId)
-    return next(new AppError('Please provide the category id', 400));
+  // if (!categoryId)
+  //   return next(new AppError('Please provide the category id', 400));
 
   // Build the filter object based on the parameters
-  const filter = {
-    category: mongoose.Types.ObjectId(categoryId),
-  };
+  const filter = {};
+  if (categoryId) filter.category = mongoose.Types.ObjectId(categoryId);
+
   let projection = {};
   if (!req.user || req.user.role !== 'admin') {
     filter.active = true;
