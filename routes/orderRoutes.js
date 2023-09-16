@@ -16,14 +16,16 @@ router.get('/', orderController.getAllOrders);
 router
   .route('/:id')
   .get(orderController.getOrder)
-  .patch(orderController.updateOrderFilterBody, orderController.updateOrder)
-  .post(
-    orderController.cancelOrder,
-    orderController.cancelCashPending,
-    orderController.cancelCashDeleviery,
-    paymobController.authReq,
-    orderController.cancelOnlinePending,
-    orderController.cancelOnlineDeleviery
-  );
+  .patch(orderController.updateOrderFilterBody, orderController.updateOrder);
+
+router.post(
+  '/cancel/:id',
+  orderController.cancelOrder,
+  orderController.cancelCashPending,
+  orderController.cancelCashDeleviery,
+  paymobController.authReq,
+  orderController.cancelOnlinePending,
+  orderController.cancelOnlineDeleviery
+);
 
 module.exports = router;
