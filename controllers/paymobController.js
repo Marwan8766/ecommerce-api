@@ -392,7 +392,7 @@ const payWebhookHandler = async (data) => {
 };
 
 const refundWebhookHandler = async (data) => {
-  await Order.findByIdAndUpdate(data.order.merchant_order_id, {
+  await orderModel.findByIdAndUpdate(data.order.merchant_order_id, {
     status: 'canceled',
     paymobRefundTransactionId: data.id,
   });
