@@ -5,7 +5,7 @@ const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const mongoose = require('mongoose');
 
-// get all orders (protected)  (includes filter by status and date and totalprice and paymentMethod and paymentMethodType and userId)
+// get all orders (protected)  (includes filter by status and date and totalprice and paymentMethod and paymentMethodType and userId).
 exports.getAllOrders = catchAsync(async (req, res, next) => {
   const {
     userId,
