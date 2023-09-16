@@ -4,7 +4,6 @@ const paymobController = require('./paymobController');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const mongoose = require('mongoose');
-const { parseISO } = require('date-fns');
 
 // get all orders (protected)  (includes filter by status and date and totalprice and paymentMethod and paymentMethodType and userId)
 exports.getAllOrders = catchAsync(async (req, res, next) => {
@@ -53,13 +52,13 @@ exports.getAllOrders = catchAsync(async (req, res, next) => {
 
   // filter by date
   if (minDate && !maxDate) {
-    queryObj.createdAt = { $gte: new Date(parseISO(minDate)) };
+    queryObj.createdAt = { $gte: new Date(minDate) };
   } else if (!minDate && maxDate) {
-    queryObj.createdAt = { $lte: new Date(parseISO(maxDate)) };
+    queryObj.createdAt = { $lte: new Date(maxDate) };
   } else if (minDate && maxDate) {
     queryObj.createdAt = {
-      $gte: new Date(parseISO(minDate)),
-      $lte: new Date(parseISO(maxDate)),
+      $gte: new Date(minDate),
+      $lte: new Date(maxDate),
     };
   }
 
