@@ -166,7 +166,7 @@ exports.cancelOrder = catchAsync(async (req, res, next) => {
   // CHECK ORDER STATUS
 
   // if not pending or outForDeleviery return error
-  if (order.status !== 'pending' || order.status !== 'outForDeleviery')
+  if (order.status !== 'pending' && order.status !== 'outForDeleviery')
     return next(
       new AppError(`you can't cancel this order as it is ${order.status}`),
       400
