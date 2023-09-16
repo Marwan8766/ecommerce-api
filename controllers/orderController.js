@@ -300,7 +300,7 @@ exports.cancelCashDeleviery = catchAsync(async (req, res, next) => {
 exports.cancelOnlineDeleviery = catchAsync(async (req, res, next) => {
   const { cancelType, order, paymobAuthToken } = req;
   const transaction_id = order.paymobPayTransactionId;
-  const amount = order.totalPrice;
+  const amount = order.totalPrice - order.delevieryPrice;
   let amount_cents_refunded = 0;
 
   if (cancelType !== 'delevieryOnline')
