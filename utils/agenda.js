@@ -1,8 +1,7 @@
 const Agenda = require('agenda');
 const blackListTokenModel = require('../models/blackListToken.model');
 const Order = require('../models/orderModel');
-const Coupon = require('../models/couponModel');
-const Product = require('../models/productModel');
+const cancelHandler = require('../controllers/reserveCancelOrderHandler');
 const dotenv = require('dotenv');
 
 // Initialize the Agenda library
@@ -70,10 +69,10 @@ agenda.define('cancel preCheckout order', async (job, done) => {
     promises.push(order.save({ validateModifiedOnly: true }));
 
     // cancel the coupon
-    promises.push(findAndCancelCoupon(order.couponId));
+    promises.push(cancelHandler.findAndCancelCoupon(order.couponId));
 
     // cancel the items
-    promises.push(findAndCancelProducts(order.items));
+    promises.push(cancelHandler.findAndCancelProducts(order.items));
 
     // run all promises in parallel
     await Promise.all(promises);
@@ -94,54 +93,5 @@ agenda.define('cancel preCheckout order', async (job, done) => {
 // agenda.on('ready', () => {
 //   agenda.start();
 // });
-
-const findAndCancelCoupon = async (couponId) => {
-  if (!couponId) return;
-
-  await Coupon.findOneAndUpdate(
-    {
-      _id: couponId,
-      expirationDate: { $gt: Date.now() },
-    },
-    { $inc: { quantity: 1 } }, // Increment the quantity by one
-    { new: true } // Return the updated document
-  );
-};
-
-const findAndCancelProducts = async (orderItems) => {
-  // Create an array to store promises for finding and canceling products
-  const findAndCancelPromises = orderItems.map(async (orderItem) => {
-    const product = await Product.findById(orderItem.product);
-
-    if (!product) {
-      // Product not found, you can log this if needed
-      console.log(`Product not found for item with ID: ${orderItem._id}`);
-      return; // Skip canceling this item
-    }
-
-    const selectedVariation = product.variations.find(
-      (variation) =>
-        variation._id.toString() ===
-        orderItem.selectedVariation.variationId.toString()
-    );
-
-    if (!selectedVariation) {
-      // Selected variation not found, you can log this if needed
-      console.log(
-        `Selected variation not found for item with ID: ${orderItem._id}`
-      );
-      return; // Skip canceling this item
-    }
-
-    // Cancel the product by incrementing the quantity back
-    selectedVariation.quantity += orderItem.quantity;
-
-    // Save the updated product
-    await product.save({ validateModifiedOnly: true });
-  });
-
-  // Run all find and cancel promises in parallel
-  await Promise.all(findAndCancelPromises);
-};
 
 module.exports = agenda;

@@ -3,6 +3,7 @@ const Coupon = require('../models/couponModel');
 const Product = require('../models/productModel');
 const Order = require('../models/orderModel');
 const Cart = require('../models/cartModel');
+const reserveHandler = require('./reserveCancelOrderHandler');
 
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
@@ -62,11 +63,11 @@ exports.preCheckout = catchAsync(async (req, res, next) => {
   promises.push(zonePromise);
 
   // check if there is coupon apply it and reserve it
-  const couponPromise = findAndReserveCoupon(couponName);
+  const couponPromise = reserveHandler.findAndReserveCoupon(couponName);
   promises.push(couponPromise);
 
   // reserve the products which are all items in the user's cart
-  const productsPromise = findAndReserveProducts(cart.items);
+  const productsPromise = reserveHandler.findAndReserveProducts(cart.items);
   promises.push(productsPromise);
 
   // run all the promises
@@ -201,73 +202,5 @@ const findDelevieryZone = async (zoneId) => {
     return delevieryZone;
   } catch {
     throw new AppError("This deleviery zone cann't be found", 404);
-  }
-};
-
-const findAndReserveCoupon = async (couponName) => {
-  if (!couponName) return null;
-
-  const coupon = await Coupon.findOneAndUpdate(
-    {
-      name: couponName,
-      expirationDate: { $gt: Date.now() },
-      quantity: { $gt: 0 },
-    },
-    { $inc: { quantity: -1 } }, // Decrement the quantity by one
-    { new: true } // Return the updated document
-  );
-
-  return coupon;
-};
-
-const findAndReserveProducts = async (cartItems) => {
-  try {
-    // Create an array to store promises for finding and reserving products
-    const findAndReservePromises = cartItems.map(async (cartItem) => {
-      const product = await Product.findById(cartItem.product);
-
-      // Check if the product is found
-      if (!product) {
-        throw new AppError(
-          `Product not found for item with ID: ${cartItem._id}`,
-          404
-        );
-      }
-
-      // Find the selected variation
-      const selectedVariation = product.variations.find(
-        (variation) =>
-          variation._id.toString() ===
-          cartItem.selectedVariation.variationId.toString()
-      );
-
-      // Check if the selected variation is found
-      if (!selectedVariation) {
-        throw new AppError(
-          `Selected variation not found for item with ID: ${cartItem._id}`,
-          404
-        );
-      }
-
-      // Check if the selected variation quantity is available
-      if (selectedVariation.quantity < cartItem.quantity) {
-        throw new AppError(
-          `Selected variation quantity not available for item with ID: ${cartItem._id}`,
-          404
-        );
-      }
-
-      // Reserve the product by decrementing the quantity
-      selectedVariation.quantity -= cartItem.quantity;
-
-      // Save the updated product
-      await product.save({ validateModifiedOnly: true });
-    });
-
-    // Run all find and reserve promises in parallel
-    await Promise.all(findAndReservePromises);
-  } catch (error) {
-    console.error(error);
-    throw new AppError('Error finding the products', 404);
   }
 };

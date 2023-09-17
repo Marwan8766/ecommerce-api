@@ -7,6 +7,7 @@ const crypto = require('crypto');
 const createOrderEmail = require('../utils/createOrderEmail');
 const User = require('../models/userModel');
 const sendMail = require('../utils/email');
+const cancelHandler = require('./reserveCancelOrderHandler');
 
 /* 
 1. Authentication Request:
@@ -328,6 +329,7 @@ exports.valuPayment = catchAsync(async (req, res, next) => {
 });
 
 exports.transactionsWebhook = catchAsync(async (req, res, next) => {
+  console.log('type: ', req.body.type);
   console.log('obj: ', req.body.obj);
   // check if the req is authenticated
   if (
@@ -341,7 +343,6 @@ exports.transactionsWebhook = catchAsync(async (req, res, next) => {
 
   // transaction failed
   // return
-  console.log(`req.body.obj: ${req.body.obj}`);
   if (req.body.type !== 'TRANSACTION') return;
   if (!req.body.obj.success) return;
 
@@ -392,10 +393,29 @@ const payWebhookHandler = async (data) => {
 };
 
 const refundWebhookHandler = async (data) => {
-  await orderModel.findByIdAndUpdate(data.order.merchant_order_id, {
-    status: 'canceled',
-    paymobRefundTransactionId: data.id,
-  });
+  const order = await orderModel.findByIdAndUpdate(
+    data.order.merchant_order_id,
+    {
+      status: 'canceled',
+      paymobRefundTransactionId: data.id,
+    },
+    {
+      new: true,
+    }
+  );
+
+  // Define array to hold the promises
+  const promises = [];
+
+  // cancel coupon if there is
+  if (order.couponId)
+    promises.push(cancelHandler.findAndCancelCoupon(order.couponId));
+
+  // cancel products
+  promises.push(cancelHandler.findAndCancelProducts(order.items));
+
+  // apply all promises in parallel
+  await Promise.all(promises);
 };
 
 const calculateCompareHMAC = (data, hmacSecret, receivedHmac) => {
