@@ -1,6 +1,7 @@
 const Order = require('../models/orderModel');
 const Factory = require('./handlerFactory');
 const paymobController = require('./paymobController');
+const userSocketMap = require('../utils/userSocketMap');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const mongoose = require('mongoose');
@@ -160,7 +161,38 @@ exports.updateOrderFilterBody = (req, res, next) => {
   next();
 };
 
-exports.updateOrder = Factory.updateOne(Order);
+// exports.updateOrder = Factory.updateOne(Order);
+
+exports.updateOrder = catchAsync(async (req, res, next) => {
+  const { io } = req;
+
+  const order = await Order.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true,
+  });
+
+  if (!order) return next(new AppError('No document found for that ID', 404));
+
+  // emit update order event for admins
+  io.to('admins').emit('orderUpdated', order);
+
+  // emit update order event for the user if connected
+  // Retrieve the user's socket
+  const userSocket = userSocketMap.getUserSocket(order.user);
+
+  // Check if the user has a socket
+  if (userSocket) {
+    // Emit the event to the user's socket
+    userSocket.emit('orderUpdated', order);
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      data: doc,
+    },
+  });
+});
 
 // cancel order
 exports.cancelOrder = catchAsync(async (req, res, next) => {
@@ -231,7 +263,7 @@ exports.cancelOrder = catchAsync(async (req, res, next) => {
 });
 
 exports.cancelCashPending = catchAsync(async (req, res, next) => {
-  const { cancelType, order } = req;
+  const { cancelType, order, io } = req;
 
   if (cancelType !== 'pendingCash') return next();
 
@@ -243,6 +275,9 @@ exports.cancelCashPending = catchAsync(async (req, res, next) => {
     return next(
       new AppError('error canceling your order please try again', 500)
     );
+
+  // emit update order event for admins
+  io.to('admins').emit('orderUpdated', updatedOrder);
 
   return res.status(200).json({
     status: 'success',
@@ -278,7 +313,7 @@ exports.cancelOnlinePending = catchAsync(async (req, res, next) => {
 });
 
 exports.cancelCashDeleviery = catchAsync(async (req, res, next) => {
-  const { cancelType, order, user } = req;
+  const { cancelType, order, user, io } = req;
 
   if (cancelType !== 'delevieryCash') return next();
 
@@ -301,6 +336,9 @@ exports.cancelCashDeleviery = catchAsync(async (req, res, next) => {
       return next(
         new AppError('error canceling your order please try again', 500)
       );
+
+    // emit update order event for admins
+    io.to('admins').emit('orderUpdated', updatedOrder);
 
     return res.status(200).json({
       status: 'success',

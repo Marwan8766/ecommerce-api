@@ -538,3 +538,33 @@ exports.restrictTo =
       );
     next();
   };
+
+// Auth for socket.io (used in io middleware)
+exports.protectSocket = async (token, socket) => {
+  if (!token)
+    return next(new AppError("You aren't logged in, please login first", 401));
+
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+
+  const currentUser = await User.findById(decoded.id);
+  if (!currentUser)
+    return next(new AppError('This user does no longer exist'), 401);
+
+  if (!currentUser.emailConfirmed)
+    return next(new AppError('You must confirm your email first', 403));
+
+  if (
+    currentUser.passwordHasChanged(decoded.iat, currentUser.passwordChangedAt)
+  )
+    return next(
+      new AppError('Your password has changed, please login again', 401)
+    );
+
+  const tokenBlackListed = await new blacklistToken().findOne({ token });
+  if (tokenBlackListed)
+    return next(
+      new AppError('Your session has expired, please login again', 401)
+    );
+
+  socket.user = currentUser;
+};

@@ -1,9 +1,13 @@
 const express = require('express');
+const http = require('http');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+const { Server } = require('socket.io');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/appErrorController');
+const authController = require('./controllers/authController');
+const userSocketMap = require('./utils/userSocketMap');
 
 const cors = require('cors');
 const app = express();
@@ -76,8 +80,58 @@ mongoose
   .then(() => console.log('DB is connected...'));
 
 const port = process.env.PORT;
+const server = http.createServer(app);
 
-const server = app.listen(port, `0.0.0.0`, () => {
+// Socket.io setup
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+  },
+});
+
+// io middleware to authenticate the user
+io.use(async (socket, next) => {
+  try {
+    if (socket.handshake.auth && socket.handshake.auth.token) {
+      const token = socket.handshake.auth.token;
+      await authController.protectSocket(token, socket);
+      next(); // Continue if authentication is successful
+    } else {
+      throw new Error('Authentication error');
+    }
+  } catch (error) {
+    console.log(error);
+    next(error); // Pass the error to the error handling middleware
+  }
+});
+
+// Create the 'admins' room
+io.of('/')
+  .in('admins')
+  .allSockets()
+  .then((clients) => {
+    console.log(`Admins room clients: ${clients}`);
+  });
+
+io.on('connection', (socket) => {
+  const userId = socket.user._id;
+  const userRole = socket.user.role;
+
+  if (userRole === 'user') userSocketMap.addUserSocket(userId, socket);
+  else if (userRole === 'admin') socket.join('admins');
+
+  socket.on('disconnect', () => {
+    if (userRole === 'user') userSocketMap.removeUserSocket(userId);
+    else if (userRole === 'admin') socket.leave('admins');
+  });
+});
+
+app.use((req, res, next) => {
+  req.io = io; // Attach io to the request object
+  next();
+});
+
+server.listen(port, `0.0.0.0`, () => {
   console.log(`Server running on port ${port}...`);
 });
 server.timeout = 120000; // 120 seconds

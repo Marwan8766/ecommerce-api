@@ -119,7 +119,7 @@ exports.preCheckout = catchAsync(async (req, res, next) => {
 
 exports.checkoutCash = catchAsync(async (req, res, next) => {
   const { orderId } = req.params;
-  const { user } = req;
+  const { user, io } = req;
 
   // find the user order
   const order = await Order.findById(orderId);
@@ -159,6 +159,15 @@ exports.checkoutCash = catchAsync(async (req, res, next) => {
 
   // run all promises
   const [orderResult] = await Promise.all(promises);
+
+  // if order not updated return error
+  if (!orderResult)
+    return next(new AppError('error while checking out in cash', 500));
+
+  // SOCKET.IO
+
+  // emit new order event for admins
+  io.to('admins').emit('orderAdded', orderResult);
 
   // send a response with the data
   return res.status(200).json({

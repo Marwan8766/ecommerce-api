@@ -8,6 +8,7 @@ const createOrderEmail = require('../utils/createOrderEmail');
 const User = require('../models/userModel');
 const sendMail = require('../utils/email');
 const cancelHandler = require('./reserveCancelOrderHandler');
+const userSocketMap = require('../utils/userSocketMap');
 
 /* 
 1. Authentication Request:
@@ -349,19 +350,22 @@ exports.transactionsWebhook = catchAsync(async (req, res, next) => {
   // transaction success
   console.log('transaction uccess');
 
+  // get io from req
+  const { io } = req;
+
   // pay transaction
   if (!req.body.obj.is_refunded) {
-    await payWebhookHandler(req.body.obj);
+    await payWebhookHandler(req.body.obj, io);
     return res.status(200);
   }
 
   // refund transaction
-  await refundWebhookHandler(req.body.obj);
+  await refundWebhookHandler(req.body.obj, io);
 
   return res.status(200);
 });
 
-const payWebhookHandler = async (data) => {
+const payWebhookHandler = async (data, io) => {
   // make an array to hold the prmises
   const promises = [];
 
@@ -389,10 +393,13 @@ const payWebhookHandler = async (data) => {
   promises.push(sendMail(optionsObj));
 
   // run all the promises in parallel
-  await Promise.all(promises);
+  const [cartResult, orderResult] = await Promise.all(promises);
+
+  // emit new order event for admins
+  io.to('admins').emit('orderAdded', orderResult);
 };
 
-const refundWebhookHandler = async (data) => {
+const refundWebhookHandler = async (data, io) => {
   const order = await orderModel.findByIdAndUpdate(
     data.order.merchant_order_id,
     {
@@ -416,6 +423,21 @@ const refundWebhookHandler = async (data) => {
 
   // apply all promises in parallel
   await Promise.all(promises);
+
+  // SOCKET.IO
+
+  // emit update order event for admins
+  io.to('admins').emit('orderUpdated', order);
+
+  // emit update order event for the user if connected
+  // Retrieve the user's socket
+  const userSocket = userSocketMap.getUserSocket(order.user);
+
+  // Check if the user has a socket
+  if (userSocket) {
+    // Emit the event to the user's socket
+    userSocket.emit('orderUpdated', order);
+  }
 };
 
 const calculateCompareHMAC = (data, hmacSecret, receivedHmac) => {
