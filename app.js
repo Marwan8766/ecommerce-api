@@ -102,6 +102,8 @@ io.use(async (socket, next) => {
   } catch (error) {
     console.log(error);
     next(error); // Pass the error to the error handling middleware
+    // Emit an error event to the client with the error message if needed
+    socket.emit('customError', { message: error.message });
   }
 });
 
