@@ -13,10 +13,7 @@ router.use(authController.protect);
 
 router.get('/', orderController.getAllOrders);
 
-router
-  .route('/:id')
-  .get(orderController.getOrder)
-  .patch(orderController.updateOrderFilterBody, orderController.updateOrder);
+router.get('/:id', orderController.getOrder);
 
 router.post(
   '/cancel/:id',
@@ -26,6 +23,14 @@ router.post(
   paymobController.authReq,
   orderController.cancelOnlinePending,
   orderController.cancelOnlineDeleviery
+);
+
+router.use(authController.restrictTo('admin'));
+
+router.patch(
+  '/:id',
+  orderController.updateOrderFilterBody,
+  orderController.updateOrder
 );
 
 module.exports = router;

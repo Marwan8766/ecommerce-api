@@ -141,7 +141,21 @@ exports.getOrder = catchAsync(async (req, res, next) => {
 
 // update order status (only admin)
 exports.updateOrderFilterBody = (req, res, next) => {
-  const bodyObj = { status: req.body.status };
+  const { status } = req.body;
+
+  const bodyObj = {};
+
+  if (status === 'outForDeleviery' || status === 'completed') {
+    bodyObj.status = status;
+  } else {
+    return next(
+      new AppError(
+        'you must select a valid status either outForDeleviery or completed.',
+        400
+      )
+    );
+  }
+
   req.body = bodyObj;
   next();
 };
