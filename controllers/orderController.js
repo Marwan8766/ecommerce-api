@@ -280,7 +280,7 @@ exports.cancelOnlinePending = catchAsync(async (req, res, next) => {
 exports.cancelCashDeleviery = catchAsync(async (req, res, next) => {
   const { cancelType, order, user } = req;
 
-  if (cancelType !== 'delevieryOnline') return next();
+  if (cancelType !== 'delevieryCash') return next();
 
   // cash payment and not admin so return error
   if (order.paymentMethod === 'cash' && user.role !== 'admin') {
