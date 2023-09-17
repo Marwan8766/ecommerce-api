@@ -483,7 +483,7 @@ exports.refund = async (auth_token, transaction_id, amount) => {
     });
 
     // Check if the request was successful
-    if (response.status !== 200) {
+    if (response.status !== 201) {
       console.error('Refund failed. Status Code:', response.status);
       throw new AppError('something went wrong while refunding', 500);
     }
