@@ -488,6 +488,9 @@ exports.refund = async (auth_token, transaction_id, amount) => {
       throw new AppError('something went wrong while refunding', 500);
     }
 
+    console.log('res.data ', response.data);
+    console.log('res.data.obj ', response.data.obj);
+
     const amount_cents = response.data.obj.amount_cents;
     console.log('Refund Successful.');
     return amount_cents;
