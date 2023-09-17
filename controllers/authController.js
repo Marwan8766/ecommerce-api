@@ -541,33 +541,37 @@ exports.restrictTo =
 
 // Auth for socket.io (used in io middleware)
 exports.protectSocket = async (token, socket) => {
-  if (!token)
-    return next(new AppError("You aren't logged in, please login first", 401));
+  try {
+    if (!token) throw new Error("You aren't logged in, please login first");
 
-  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+    const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
 
-  const currentUser = await User.findById(decoded.id);
-  if (!currentUser) return console.log('This user does no longer exist');
-  // return next(new AppError('This user does no longer exist'), 401);
+    const currentUser = await User.findById(decoded.id);
+    if (!currentUser) throw new Error('This user does no longer exist');
+    // return next(new AppError('This user does no longer exist'), 401);
 
-  if (!currentUser.emailConfirmed)
-    return console.log('You must confirm your email first');
-  // return next(new AppError('You must confirm your email first', 403));
+    if (!currentUser.emailConfirmed)
+      throw new Error('You must confirm your email first');
+    // return next(new AppError('You must confirm your email first', 403));
 
-  if (
-    currentUser.passwordHasChanged(decoded.iat, currentUser.passwordChangedAt)
-  )
-    return console.log('Your password has changed, please login again');
-  // return next(
-  //   new AppError('Your password has changed, please login again', 401)
-  // );
+    if (
+      currentUser.passwordHasChanged(decoded.iat, currentUser.passwordChangedAt)
+    )
+      throw new Error('Your password has changed, please login again');
+    // return next(
+    //   new AppError('Your password has changed, please login again', 401)
+    // );
 
-  const tokenBlackListed = await new blacklistToken().findOne({ token });
-  if (tokenBlackListed)
-    return console.log('Your session has expired, please login again');
-  // return next(
-  //   new AppError('Your session has expired, please login again', 401)
-  // );
+    const tokenBlackListed = await new blacklistToken().findOne({ token });
+    if (tokenBlackListed)
+      throw new Error('Your session has expired, please login again');
+    // return next(
+    //   new AppError('Your session has expired, please login again', 401)
+    // );
 
-  socket.user = currentUser;
+    socket.user = currentUser;
+  } catch (error) {
+    console.log('auth socket error: ', error);
+    throw new Error(error.message);
+  }
 };
