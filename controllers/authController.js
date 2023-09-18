@@ -502,7 +502,7 @@ exports.protect = catchAsync(async (req, res, next) => {
     decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
   } catch (error) {
     console.error(`error in auth: ${error.message} , ${error}`);
-    return next(new AppError('invalid token', 403));
+    return next(new AppError('invalid token', 401));
   }
 
   // check if the user still exists
