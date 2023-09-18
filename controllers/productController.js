@@ -563,9 +563,10 @@ exports.authUserProduct = catchAsync(async (req, res, next) => {
 
   if (!token) return next();
 
+  let decoded;
   try {
     // verification token
-    const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+    decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
   } catch (error) {
     return next();
   }
