@@ -495,8 +495,14 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   if (!token)
     return next(new AppError("You aren't logged in, please login first", 401));
-  // verification token
-  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+
+  try {
+    // verification token
+    const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+  } catch (error) {
+    console.error(`error in auth: ${error.message} , ${error}`);
+    return next(new AppError('invalid token', 403));
+  }
 
   // check if the user still exists
   const currentUser = await User.findById(decoded.id).select('+emailConfirmed');

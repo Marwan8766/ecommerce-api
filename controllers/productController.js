@@ -563,8 +563,12 @@ exports.authUserProduct = catchAsync(async (req, res, next) => {
 
   if (!token) return next();
 
-  // verification token
-  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+  try {
+    // verification token
+    const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+  } catch (error) {
+    return next();
+  }
 
   // check if the user still exists
   const currentUser = await User.findById(decoded.id).select('+emailConfirmed');
