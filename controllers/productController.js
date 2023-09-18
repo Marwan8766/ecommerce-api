@@ -568,29 +568,22 @@ exports.authUserProduct = catchAsync(async (req, res, next) => {
 
   // check if the user still exists
   const currentUser = await User.findById(decoded.id).select('+emailConfirmed');
-  if (!currentUser)
-    return next(new AppError('This user does no longer exist'), 401);
+  if (!currentUser) return next();
 
   console.log(`user emailConfirmed: ${currentUser.emailConfirmed}`);
   console.log(`user role: ${currentUser.role}`);
   // check if user confirmed his email
-  if (!currentUser.emailConfirmed)
-    return next(new AppError('You must confirm your email first', 403));
+  if (!currentUser.emailConfirmed) return next();
 
   // check if the user has chamged his password after the token was issued
   if (
     currentUser.passwordHasChanged(decoded.iat, currentUser.passwordChangedAt)
   )
-    return next(
-      new AppError('Your password has changed, please login again', 401)
-    );
+    return next();
 
   // check if the token is in the black list tokens
   const tokenBlackListed = await blacklistToken.findOne({ token });
-  if (tokenBlackListed)
-    return next(
-      new AppError('Your session has expired, please login again', 401)
-    );
+  if (tokenBlackListed) return next();
 
   req.user = currentUser;
   // Grant access to the protected route
