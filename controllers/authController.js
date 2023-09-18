@@ -566,7 +566,7 @@ exports.protectSocket = async (token, socket) => {
     //   new AppError('Your password has changed, please login again', 401)
     // );
 
-    const tokenBlackListed = await new blacklistToken().findOne({ token });
+    const tokenBlackListed = await blacklistToken.findOne({ token });
     if (tokenBlackListed)
       throw new Error('Your session has expired, please login again');
     // return next(
