@@ -546,11 +546,13 @@ exports.protectSocket = async (token, socket) => {
 
     const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
 
-    const currentUser = await User.findById(decoded.id);
+    const currentUser = await User.findById(decoded.id).select(
+      '+emailConfirmed'
+    );
     if (!currentUser) throw new Error('This user does no longer exist');
     // return next(new AppError('This user does no longer exist'), 401);
 
-    console.log(`socketUser: ${JSON.stringify(currentUser)}`);
+    // console.log(`socketUser: ${JSON.stringify(currentUser)}`);
 
     if (!currentUser.emailConfirmed)
       throw new Error('You must confirm your email first');
