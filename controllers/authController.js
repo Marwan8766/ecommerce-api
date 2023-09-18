@@ -550,6 +550,8 @@ exports.protectSocket = async (token, socket) => {
     if (!currentUser) throw new Error('This user does no longer exist');
     // return next(new AppError('This user does no longer exist'), 401);
 
+    console.log(`socketUser: ${JSON.stringify(currentUser)}`);
+
     if (!currentUser.emailConfirmed)
       throw new Error('You must confirm your email first');
     // return next(new AppError('You must confirm your email first', 403));
