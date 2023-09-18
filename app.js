@@ -37,47 +37,7 @@ app.use(express.json());
 // Middleware to parse urlencoded data
 app.use(express.urlencoded({ extended: true }));
 
-// Routing
-app.use('/api/v1/auth', authRouter);
-app.use('/api/v1/users', userRouter);
-app.use('/api/v1/category', categoryRouter);
-app.use('/api/v1/product', productRouter);
-app.use('/api/v1/coupons', couponRouter);
-app.use('/api/v1/cart', cartRouter);
-app.use('/api/v1/delevieryZone', delevieryZoneRouter);
-app.use('/api/v1/checkout', checkoutRouter);
-app.use('/api/v1/paymob', paymobRouter);
-app.use('/api/v1/order', orderRouter);
-
-app.all('*', (req, res, next) => {
-  next(new AppError(`Couldn't find ${req.originalUrl} on this server!`, 400));
-});
-
-// IMPLEMENTING a global error handling middleware
-app.use(globalErrorHandler);
-
-// server.js
-
-process.on('uncaughtException', (err) => {
-  console.log('UNCAUGHT EXCEPTION, server is shutting down...');
-  console.log(err.name, err.message);
-  process.exit(1);
-});
-
-dotenv.config({ path: './config.env' });
-
-const DB = process.env.DATABASE.replace(
-  '<PASSWORD>',
-  process.env.DATABASE_PASSWORD
-);
-mongoose
-  .connect(DB, {
-    useNewUrlParser: true,
-    useCreateIndex: true,
-    useFindAndModify: false,
-    useUnifiedTopology: true, // that is what i added due to terminal error
-  })
-  .then(() => console.log('DB is connected...'));
+// io
 
 const port = process.env.PORT;
 const server = http.createServer(app);
@@ -132,6 +92,48 @@ app.use((req, res, next) => {
   req.io = io; // Attach io to the request object
   next();
 });
+
+// Routing
+app.use('/api/v1/auth', authRouter);
+app.use('/api/v1/users', userRouter);
+app.use('/api/v1/category', categoryRouter);
+app.use('/api/v1/product', productRouter);
+app.use('/api/v1/coupons', couponRouter);
+app.use('/api/v1/cart', cartRouter);
+app.use('/api/v1/delevieryZone', delevieryZoneRouter);
+app.use('/api/v1/checkout', checkoutRouter);
+app.use('/api/v1/paymob', paymobRouter);
+app.use('/api/v1/order', orderRouter);
+
+app.all('*', (req, res, next) => {
+  next(new AppError(`Couldn't find ${req.originalUrl} on this server!`, 400));
+});
+
+// IMPLEMENTING a global error handling middleware
+app.use(globalErrorHandler);
+
+// server.js
+
+process.on('uncaughtException', (err) => {
+  console.log('UNCAUGHT EXCEPTION, server is shutting down...');
+  console.log(err.name, err.message);
+  process.exit(1);
+});
+
+dotenv.config({ path: './config.env' });
+
+const DB = process.env.DATABASE.replace(
+  '<PASSWORD>',
+  process.env.DATABASE_PASSWORD
+);
+mongoose
+  .connect(DB, {
+    useNewUrlParser: true,
+    useCreateIndex: true,
+    useFindAndModify: false,
+    useUnifiedTopology: true, // that is what i added due to terminal error
+  })
+  .then(() => console.log('DB is connected...'));
 
 server.listen(port, `0.0.0.0`, () => {
   console.log(`Server running on port ${port}...`);
