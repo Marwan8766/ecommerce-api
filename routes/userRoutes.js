@@ -14,6 +14,10 @@ router.get('/me', userController.GetUser);
 
 router.patch('/me', userController.UpdateUser);
 
+router.post('/address', userController.addAddress);
+
+router.delete('/address/:id', userController.removeAddress);
+
 // router.patch('/updatePassword', authController.updatePassword);
 // router.delete('/deleteMe', userController.deleteMe, userController.deleteuser);
 // router.delete('/deleteAccount', authController.deleteAccount);
