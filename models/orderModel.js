@@ -148,6 +148,7 @@ const orderSchema = new mongoose.Schema(
           type: String,
           required: [true, 'An Order Item must have a Product Description'],
         },
+        coverImage: String,
         selectedVariation: {
           color: String,
           size: String,

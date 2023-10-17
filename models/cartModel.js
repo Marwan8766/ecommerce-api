@@ -30,6 +30,7 @@ const cartSchema = new mongoose.Schema(
           type: String,
           required: [true, 'A Cart Item must have a Product Description'],
         },
+        coverImage: String,
         selectedVariation: {
           color: String,
           size: String,
