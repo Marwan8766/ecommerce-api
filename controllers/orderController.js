@@ -279,6 +279,16 @@ exports.cancelCashPending = catchAsync(async (req, res, next) => {
   // emit update order event for admins
   io.to('admins').emit('orderUpdated', updatedOrder);
 
+  // emit update order event for the user if connected
+  // Retrieve the user's socket
+  const userSocket = userSocketMap.getUserSocket(order.user);
+
+  // Check if the user has a socket
+  if (userSocket) {
+    // Emit the event to the user's socket
+    userSocket.emit('orderUpdated', order);
+  }
+
   return res.status(200).json({
     status: 'success',
     message: 'your order has been successfully canceled',
@@ -339,6 +349,16 @@ exports.cancelCashDeleviery = catchAsync(async (req, res, next) => {
 
     // emit update order event for admins
     io.to('admins').emit('orderUpdated', updatedOrder);
+
+    // emit update order event for the user if connected
+    // Retrieve the user's socket
+    const userSocket = userSocketMap.getUserSocket(order.user);
+
+    // Check if the user has a socket
+    if (userSocket) {
+      // Emit the event to the user's socket
+      userSocket.emit('orderUpdated', order);
+    }
 
     return res.status(200).json({
       status: 'success',
